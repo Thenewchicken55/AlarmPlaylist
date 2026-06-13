@@ -1,8 +1,10 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import Spinner from './Spinner'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
+  loading?: boolean
   children: ReactNode
 }
 
@@ -19,13 +21,14 @@ const sizeStyles = {
   lg: 'px-6 py-3 text-base',
 }
 
-export default function Button({ variant = 'primary', size = 'md', className = '', children, disabled, ...props }: ButtonProps) {
+export default function Button({ variant = 'primary', size = 'md', className = '', children, disabled, loading, ...props }: ButtonProps) {
   return (
     <button
       className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
-      disabled={disabled}
+      disabled={disabled || loading}
       {...props}
     >
+      {loading && <Spinner size={16} className="text-inherit" />}
       {children}
     </button>
   )

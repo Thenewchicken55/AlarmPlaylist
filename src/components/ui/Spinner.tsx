@@ -6,7 +6,7 @@ interface SpinnerProps {
 export default function Spinner({ size = 24, className = '' }: SpinnerProps) {
   return (
     <svg
-      className={`animate-spin text-indigo-400 ${className}`}
+      className={`animate-spin ${className}`}
       width={size}
       height={size}
       viewBox="0 0 24 24"

@@ -11,6 +11,7 @@ import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
 import PlayerPage from './pages/PlayerPage'
 import SettingsPage from './pages/SettingsPage'
+import SpotifyCallback from './pages/SpotifyCallback'
 
 export default function App() {
   useTheme()
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
           <Route path="/player" element={<PlayerPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/spotify-callback" element={<SpotifyCallback />} />
         </Routes>
       </AppShell>
       <Toast />
