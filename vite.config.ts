@@ -9,6 +9,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      srcDir: '.',
+      filename: 'sw.js',
+      strategies: 'injectManifest',
+      injectManifest: {
+        injectionPoint: 'self.__WB_MANIFEST',
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.svg'],
       manifest: {
         name: 'AlarmPlaylist',
@@ -35,9 +41,9 @@ export default defineConfig({
             label: 'AlarmPlaylist on desktop',
           },
         ],
+        // Generate screenshots: node scripts/generate-screenshots.mjs
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,ico}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -53,5 +59,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })
