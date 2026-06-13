@@ -64,7 +64,6 @@ export default function TrackList({ tracks, currentTrackId, onPlay, onRemove, on
           <TrackRow
             key={track.id}
             track={track}
-            index={i}
             isPlaying={track.id === currentTrackId}
             onPlay={() => onPlay(track, i)}
             onRemove={() => onRemove(track.id)}

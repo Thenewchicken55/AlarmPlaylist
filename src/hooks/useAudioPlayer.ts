@@ -38,7 +38,8 @@ export function useAudioPlayer() {
       return
     }
 
-    const trackId = currentTrack.id
+    const track = currentTrack
+    const trackId = track.id
     if (prevTrackIdRef.current === trackId && isPlaying && !audioPlayer.isPlaying()) {
       audioPlayer.play()
       return
@@ -47,9 +48,9 @@ export function useAudioPlayer() {
     prevTrackIdRef.current = trackId
 
     async function loadTrack() {
-      let url = currentTrack.url
-      if (!url && currentTrack.blobId) {
-        url = await getAudioUrl(currentTrack.blobId)
+      let url = track.url
+      if (!url && track.blobId) {
+        url = await getAudioUrl(track.blobId)
       }
       if (!url) return
 

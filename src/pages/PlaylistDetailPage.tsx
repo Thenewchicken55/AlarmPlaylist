@@ -24,19 +24,20 @@ export default function PlaylistDetailPage() {
 
   const showToast = useUIStore((s) => s.showToast)
 
-  const playlist = playlists.find((p) => p.id === id)
-
   useEffect(() => {
     loadPlaylists()
   }, [loadPlaylists])
 
-  if (!playlist) {
+  const found = playlists.find((p) => p.id === id)
+  if (!found) {
     return (
       <div className="flex items-center justify-center p-6" style={{ minHeight: 'calc(100dvh - 4rem)' }}>
         <p className="text-slate-500">Playlist not found</p>
       </div>
     )
   }
+
+  const playlist = found
 
   async function handleDelete() {
     if (confirm('Delete this playlist and all its tracks?')) {

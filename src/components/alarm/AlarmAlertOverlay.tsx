@@ -4,7 +4,7 @@ import { audioPlayer } from '../../services/player'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { getAudioUrl } from '../../db/audioStorage'
-import type { Alarm, Track } from '../../types'
+import type { Track } from '../../types'
 
 function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track | null {
   if (specificTrackId) {
@@ -23,14 +23,24 @@ export default function AlarmAlertOverlay() {
   const loadedRef = useRef(false)
 
   const alarm = alarms.find((a) => a.id === activeAlarmId)
-  const playlist = alarm ? playlists.find((p) => p.id === alarm.playlistId) : null
-  const track = alarm && playlist
-    ? getRandomTrack(playlist.tracks, alarm.specificTrackId)
+
+  if (!activeAlarmId || !alarm) return null
+
+  const alarmSafe = alarm
+
+  const playlist = playlists.find((p) => p.id === alarmSafe.playlistId)
+  const track = playlist
+    ? getRandomTrack(playlist.tracks, alarmSafe.specificTrackId)
     : null
 
+  const trackSafe = track
+
   useEffect(() => {
-    if (!alarm || !track || loadedRef.current) return
+    if (!trackSafe || loadedRef.current) return
     loadedRef.current = true
+
+    const alarm = alarmSafe
+    const track = trackSafe
 
     async function playAlarm() {
       let url = track.url
@@ -66,7 +76,7 @@ export default function AlarmAlertOverlay() {
         requireInteraction: true,
       })
     }
-  }, [alarm?.id])
+  }, [alarmSafe.id])
 
   function handleDismiss() {
     audioPlayer.stop()
@@ -77,20 +87,19 @@ export default function AlarmAlertOverlay() {
   }
 
   function handleSnooze() {
-    if (alarm && snoozeCount >= alarm.maxSnoozes && alarm.maxSnoozes > 0) return
+    const alarm = alarmSafe
+    if (snoozeCount >= alarm.maxSnoozes && alarm.maxSnoozes > 0) return
     audioPlayer.stop()
     audioPlayer.unload()
     loadedRef.current = false
     setSnoozeCount((c) => c + 1)
 
     setTimeout(() => {
-      setActiveAlarm(alarm?.id ?? null)
-    }, (alarm?.snoozeMinutes ?? 5) * 60 * 1000)
+      setActiveAlarm(alarm.id)
+    }, alarm.snoozeMinutes * 60 * 1000)
 
     setActiveAlarm(null)
   }
-
-  if (!activeAlarmId || !alarm) return null
 
   const snoozeLimit = alarm.maxSnoozes > 0 && snoozeCount >= alarm.maxSnoozes
 

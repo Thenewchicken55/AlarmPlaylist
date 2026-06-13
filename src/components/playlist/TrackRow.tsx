@@ -4,13 +4,12 @@ import { formatDuration } from '../../utils/time'
 
 interface TrackRowProps {
   track: Track
-  index: number
   isPlaying?: boolean
   onPlay: () => void
   onRemove: () => void
 }
 
-export default function TrackRow({ track, index, isPlaying, onPlay, onRemove }: TrackRowProps) {
+export default function TrackRow({ track, isPlaying, onPlay, onRemove }: TrackRowProps) {
   return (
     <div
       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
