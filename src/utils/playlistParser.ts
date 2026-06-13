@@ -61,9 +61,10 @@ export function parsePLS(content: string, basePath: string): Track[] {
     if (trimmed.startsWith('NumberOfEntries=')) continue
     if (trimmed.startsWith('Version=')) continue
 
-    const fileMatch = trimmed.match(/^File\d+=(.+)/)
+    const fileMatch = trimmed.match(/^File(\d+)=(.+)/)
     if (fileMatch) {
-      const path = fileMatch[1].trim()
+      currentEntry = parseInt(fileMatch[1]) - 1
+      const path = fileMatch[2].trim()
       const url = path.startsWith('http') ? path : resolvePath(basePath, path)
       const name = path.split('/').pop()?.split('\\').pop()?.replace(/\.[^/.]+$/, '') ?? 'Unknown'
       tracks.push({
