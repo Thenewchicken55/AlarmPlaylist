@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="38" fill="#6366f1"/>
+  <g transform="translate(96,96)">
+    <circle r="64" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="12"/>
+    <circle r="64" fill="none" stroke="white" stroke-width="12" stroke-dasharray="100 302" stroke-dashoffset="-50" stroke-linecap="round" transform="rotate(-90)"/>
+    <text x="0" y="12" font-family="system-ui,sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">♫</text>
+  </g>
+</svg>

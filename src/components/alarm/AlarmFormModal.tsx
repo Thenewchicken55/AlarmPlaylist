@@ -59,11 +59,19 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
 
   const selectedPlaylist = playlists.find((p) => p.id === playlistId)
 
+  async function requestNotif() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission()
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setLoading(true)
     try {
+      if (!editAlarm) requestNotif()
+
       if (editAlarm) {
         await updateAlarm(editAlarm.id, {
           name: name.trim(),

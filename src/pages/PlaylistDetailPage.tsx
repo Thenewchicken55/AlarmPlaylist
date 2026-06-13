@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, Play, Trash2 } from 'lucide-react'
 import TrackList from '../components/playlist/TrackList'
 import Button from '../components/ui/Button'
 import { usePlaylistStore } from '../stores/playlistStore'
@@ -11,11 +11,11 @@ import { pluralize } from '../utils/format'
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const playlists = usePlaylistStore((s) => s.playlists)
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
   const removeTrack = usePlaylistStore((s) => s.removeTrack)
+  const reorderTracks = usePlaylistStore((s) => s.reorderTracks)
   const importLocalFiles = usePlaylistStore((s) => s.importLocalFiles)
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist)
 
@@ -98,10 +98,6 @@ export default function PlaylistDetailPage() {
                 <Play size={16} />
                 Play All
               </Button>
-              <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                <Upload size={16} />
-                Import
-              </Button>
               <Button variant="ghost" size="sm" onClick={handleDelete}>
                 <Trash2 size={16} />
               </Button>
@@ -116,16 +112,8 @@ export default function PlaylistDetailPage() {
         currentTrackId={currentTrack?.id}
         onPlay={handlePlayTrack}
         onRemove={(trackId) => removeTrack(playlist.id, trackId)}
+        onReorder={(from, to) => reorderTracks(playlist.id, from, to)}
         onImportFiles={handleImport}
-      />
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="audio/*"
-        multiple
-        className="hidden"
-        onChange={(e) => e.target.files && handleImport(e.target.files)}
       />
     </div>
   )
