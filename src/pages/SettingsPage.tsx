@@ -6,6 +6,7 @@ import { useUIStore } from '../stores/uiStore'
 import { getStorageInfo } from '../db/audioStorage'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { formatFileSize } from '../utils/format'
+import { checkStorageQuota, isPrivateBrowsing } from '../utils/storage'
 
 const themeOptions = [
   { value: 'system' as const, label: 'System', icon: Monitor },
@@ -18,6 +19,7 @@ export default function SettingsPage() {
   const setTheme = useUIStore((s) => s.setTheme)
   const installPromptEvent = useUIStore((s) => s.installPromptEvent)
 
+  const showToast = useUIStore((s) => s.showToast)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [storageInfo, setStorageInfo] = useState({ totalFiles: 0, totalSize: 0 })
 
@@ -26,6 +28,16 @@ export default function SettingsPage() {
   useEffect(() => {
     setNotifPermission('Notification' in window ? Notification.permission : 'denied')
     getStorageInfo().then(setStorageInfo)
+
+    if (isPrivateBrowsing()) {
+      showToast('Private browsing detected — data may not persist', 'info')
+    }
+
+    checkStorageQuota().then((info) => {
+      if (info && !info.ok) {
+        showToast(`Storage at ${Math.round(info.percent * 100)}% — consider clearing old files`, 'info')
+      }
+    })
   }, [])
 
   async function requestNotificationPermission() {

@@ -4,16 +4,26 @@ import { Plus, Music } from 'lucide-react'
 import PlaylistCard from '../components/playlist/PlaylistCard'
 import CreatePlaylistModal from '../components/playlist/CreatePlaylistModal'
 import { usePlaylistStore } from '../stores/playlistStore'
+import { useUIStore } from '../stores/uiStore'
 
 export default function PlaylistsPage() {
   const navigate = useNavigate()
   const playlists = usePlaylistStore((s) => s.playlists)
+  const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist)
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
+  const showToast = useUIStore((s) => s.showToast)
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
     loadPlaylists()
   }, [loadPlaylists])
+
+  async function handleDelete(id: string) {
+    if (confirm('Delete this playlist and all its tracks?')) {
+      await deletePlaylist(id)
+      showToast('Playlist deleted', 'info')
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6">
@@ -49,6 +59,7 @@ export default function PlaylistsPage() {
               key={p.id}
               playlist={p}
               onClick={() => navigate(`/playlists/${p.id}`)}
+              onDelete={() => handleDelete(p.id)}
             />
           ))}
         </div>

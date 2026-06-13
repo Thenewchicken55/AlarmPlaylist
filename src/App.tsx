@@ -4,6 +4,8 @@ import Toast from './components/ui/Toast'
 import AlarmAlertOverlay from './components/alarm/AlarmAlertOverlay'
 import { useTheme } from './hooks/useTheme'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useCrossTabSync } from './hooks/useCrossTabSync'
+import { useDSTRecalc } from './hooks/useDSTRecalc'
 import AlarmPage from './pages/AlarmPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
@@ -13,6 +15,8 @@ import SettingsPage from './pages/SettingsPage'
 export default function App() {
   useTheme()
   useKeyboardShortcuts()
+  useCrossTabSync()
+  useDSTRecalc()
   return (
     <>
       <AppShell>

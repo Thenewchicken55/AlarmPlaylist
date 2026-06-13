@@ -1,19 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, Trash2 } from 'lucide-react'
+import { ArrowLeft, Play, Trash2, FolderOpen, FileText } from 'lucide-react'
 import TrackList from '../components/playlist/TrackList'
 import Button from '../components/ui/Button'
 import { usePlaylistStore } from '../stores/playlistStore'
 import { usePlayerStore } from '../stores/playerStore'
 import { useUIStore } from '../stores/uiStore'
 import { pluralize } from '../utils/format'
+import { parseM3U, parsePLS } from '../utils/playlistParser'
+import { storeAudioFile } from '../db/audioStorage'
+import { getAudioDuration } from '../utils/audio'
 
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const m3uInputRef = useRef<HTMLInputElement>(null)
 
   const playlists = usePlaylistStore((s) => s.playlists)
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
+  const addTrack = usePlaylistStore((s) => s.addTrack)
   const removeTrack = usePlaylistStore((s) => s.removeTrack)
   const reorderTracks = usePlaylistStore((s) => s.reorderTracks)
   const importLocalFiles = usePlaylistStore((s) => s.importLocalFiles)
@@ -56,6 +61,68 @@ export default function PlaylistDetailPage() {
     }
   }
 
+  async function handleImportFolder() {
+    try {
+      const handle = await (window as any).showDirectoryPicker()
+      const entries: File[] = []
+      const audioExts = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.opus', '.wma'])
+      for await (const entry of handle.values()) {
+        if (entry.kind === 'file' && audioExts.has(entry.name.substring(entry.name.lastIndexOf('.')).toLowerCase())) {
+          const file = await entry.getFile()
+          entries.push(file)
+        }
+      }
+      if (entries.length === 0) {
+        showToast('No audio files found in folder', 'info')
+        return
+      }
+      await importLocalFiles(playlist.id, entries as any)
+      showToast(`Imported ${entries.length} files from folder`, 'success')
+    } catch (err: any) {
+      if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+        showToast('Failed to import folder', 'error')
+      }
+    }
+  }
+
+  async function handleImportM3U(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      const tracks = ext === 'pls' ? parsePLS(text, file.name) : parseM3U(text, file.name)
+
+      if (tracks.length === 0) {
+        showToast('No valid tracks found in playlist file', 'info')
+        return
+      }
+
+      for (const track of tracks) {
+        if (track.url && !track.url.startsWith('http')) {
+          try {
+            const response = await fetch(track.url)
+            const blob = await response.blob()
+            const audioFile = new File([blob], track.title + '.mp3', { type: blob.type })
+            const blobId = await storeAudioFile(audioFile)
+            track.blobId = blobId
+            const url = URL.createObjectURL(blob)
+            track.url = url
+            track.duration = await getAudioDuration(audioFile)
+          } catch {
+            track.url = undefined
+          }
+        }
+        await addTrack(playlist.id, track)
+      }
+
+      showToast(`Imported ${tracks.length} tracks from ${file.name}`, 'success')
+    } catch {
+      showToast('Failed to parse playlist file', 'error')
+    }
+    e.target.value = ''
+  }
+
   function handlePlayAll() {
     if (playlist.tracks.length > 0) {
       playQueue(playlist.tracks, 0)
@@ -93,11 +160,28 @@ export default function PlaylistDetailPage() {
               {' · '}
               <span className="capitalize">{playlist.source}</span>
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Button onClick={handlePlayAll} disabled={playlist.tracks.length === 0}>
                 <Play size={16} />
                 Play All
               </Button>
+              {'showDirectoryPicker' in window && (
+                <Button variant="secondary" size="sm" onClick={handleImportFolder}>
+                  <FolderOpen size={16} />
+                  Folder
+                </Button>
+              )}
+              <Button variant="secondary" size="sm" onClick={() => m3uInputRef.current?.click()}>
+                <FileText size={16} />
+                Import .m3u
+              </Button>
+              <input
+                ref={m3uInputRef}
+                type="file"
+                accept=".m3u,.pls"
+                className="hidden"
+                onChange={handleImportM3U}
+              />
               <Button variant="ghost" size="sm" onClick={handleDelete}>
                 <Trash2 size={16} />
               </Button>
