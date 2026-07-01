@@ -240,6 +240,17 @@ npm run preview # Preview production build
 npm run test    # Run tests
 ```
 
+### API Credentials
+
+YouTube and Spotify integration requires API credentials. Copy `.env.example` to `.env` and fill in:
+
+| Variable | Where to get it |
+|---|---|
+| `VITE_YOUTUBE_CLIENT_ID` | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) — create an OAuth 2.0 Web client, add `http://localhost:5173` as an authorized JavaScript origin |
+| `VITE_SPOTIFY_CLIENT_ID` | [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) — create an app, add `http://localhost:5173/spotify-callback` as a Redirect URI |
+
+For **GitHub Pages deployment**, add these as [Actions secrets](https://github.com/Thenewchicken55/AlarmPlaylist/settings/secrets/actions) with the same names, and add `https://Thenewchicken55.github.io` as the authorized origin (YouTube) / redirect URI (Spotify).
+
 ---
 
 
