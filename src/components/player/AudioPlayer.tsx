@@ -47,7 +47,13 @@ export default function AudioPlayer() {
       } else {
         resolvedUrl = track.url
       }
-      if (!resolvedUrl || cancelled) return
+      if (!resolvedUrl || cancelled) {
+        if (!resolvedUrl && !cancelled) {
+          console.warn('No audio URL for:', track.title, '- skipping')
+          next()
+        }
+        return
+      }
 
       setUrl(resolvedUrl)
       setFormat(inferFormat(resolvedUrl))
@@ -66,9 +72,7 @@ export default function AudioPlayer() {
       const dur = h.duration()
       const prog = dur > 0 ? (seek / dur) * 100 : 0
       setProgress(prog)
-      if (h.playing()) {
-        animFrameRef.current = requestAnimationFrame(updateProgress)
-      }
+      animFrameRef.current = requestAnimationFrame(updateProgress)
     }
 
     if (isPlaying && url) {
