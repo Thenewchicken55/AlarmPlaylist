@@ -8,6 +8,8 @@ import { isYouTubeConnected, initYouTubeClient, authenticateYouTube, fetchYouTub
 import { isSpotifyConnected, authenticateSpotify, fetchSpotifyPlaylists, fetchSpotifyPlaylistTracks } from '../../services/spotify'
 import type { PlaylistSource, Playlist as PlaylistType } from '../../types'
 
+const spotifyRedirectUri = import.meta.env.VITE_SPOTIFY_REDIRECT_URI ?? `${window.location.origin}${import.meta.env.BASE_URL}spotify-callback`
+
 interface CreatePlaylistModalProps {
   open: boolean
   onClose: () => void
@@ -59,7 +61,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       toast.error('Spotify Client ID not configured. Set VITE_SPOTIFY_CLIENT_ID in .env')
       return
     }
-    authenticateSpotify(clientId, window.location.origin + '/spotify-callback')
+    authenticateSpotify(clientId, spotifyRedirectUri)
   }
 
   async function handleFetchRemote() {
@@ -92,7 +94,9 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
         name: remotePlaylist.name,
         source,
         color,
-        sourceUrl: `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
+        sourceUrl: source === 'spotify'
+          ? `https://open.spotify.com/playlist/${selectedRemoteId}`
+          : `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
       })
 
       for (const track of tracks) {

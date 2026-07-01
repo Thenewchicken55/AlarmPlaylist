@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Plus, AlarmClock } from 'lucide-react'
 import AlarmCard from '../components/alarm/AlarmCard'
 import AlarmFormModal from '../components/alarm/AlarmFormModal'
@@ -9,28 +9,11 @@ import type { Alarm } from '../types'
 
 export default function AlarmPage() {
   const alarms = useAlarmStore((s) => s.alarms)
-  const loadAlarms = useAlarmStore((s) => s.loadAlarms)
   const toggleAlarm = useAlarmStore((s) => s.toggleAlarm)
   const deleteAlarm = useAlarmStore((s) => s.deleteAlarm)
-  const setActiveAlarm = useAlarmStore((s) => s.setActiveAlarm)
 
   const [showForm, setShowForm] = useState(false)
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null)
-
-  useEffect(() => {
-    loadAlarms()
-  }, [loadAlarms])
-
-  useEffect(() => {
-    alarmScheduler.onAlarmFire((alarm) => {
-      setActiveAlarm(alarm.id)
-    })
-  }, [setActiveAlarm])
-
-  useEffect(() => {
-    alarmScheduler.rescheduleAll(alarms)
-    return () => alarmScheduler.clearAll()
-  }, [alarms])
 
   function handleEdit(alarm: Alarm) {
     setEditingAlarm(alarm)

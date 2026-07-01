@@ -15,36 +15,20 @@ function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track 
   return tracks[Math.floor(Math.random() * tracks.length)]
 }
 
-export default function AlarmAlertOverlay() {
-  const activeAlarmId = useAlarmStore((s) => s.activeAlarmId)
-  const setActiveAlarm = useAlarmStore((s) => s.setActiveAlarm)
-  const alarms = useAlarmStore((s) => s.alarms)
+function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<typeof useAlarmStore.getState>['alarms'][number]>; onClose: () => void }) {
   const playlists = usePlaylistStore((s) => s.playlists)
   const [snoozeCount, setSnoozeCount] = useState(0)
   const loadedRef = useRef(false)
   const wasPlayingRef = useRef(false)
+  const snoozeTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
-  const alarm = alarms.find((a) => a.id === activeAlarmId)
-
-  if (!activeAlarmId || !alarm) return null
-
-  const alarmSafe = alarm
-
-  const playlist = playlists.find((p) => p.id === alarmSafe.playlistId)
-  const track = playlist
-    ? getRandomTrack(playlist.tracks, alarmSafe.specificTrackId)
-    : null
-
-  const trackSafe = track
+  const playlist = playlists.find((p) => p.id === alarm.playlistId)
+  const track = playlist ? getRandomTrack(playlist.tracks, alarm.specificTrackId) : null
 
   useEffect(() => {
-    if (!trackSafe || loadedRef.current) return
+    if (!track || loadedRef.current) return
     loadedRef.current = true
 
-    const alarm = alarmSafe
-    const track = trackSafe
-
-    // Pause music player
     wasPlayingRef.current = usePlayerStore.getState().isPlaying
     usePlayerStore.getState().pause()
 
@@ -84,32 +68,37 @@ export default function AlarmAlertOverlay() {
         requireInteraction: true,
       })
     }
-  }, [alarmSafe.id])
+
+    return () => {
+      audioPlayer.stop()
+      audioPlayer.unload()
+    }
+  }, [])
 
   function handleDismiss() {
+    clearTimeout(snoozeTimerRef.current)
     audioPlayer.stop()
     audioPlayer.unload()
     loadedRef.current = false
     if (wasPlayingRef.current) usePlayerStore.getState().resume()
-    wasPlayingRef.current = false
-    setActiveAlarm(null)
+    onClose()
     setSnoozeCount(0)
   }
 
   function handleSnooze() {
-    const alarm = alarmSafe
     if (snoozeCount >= alarm.maxSnoozes && alarm.maxSnoozes > 0) return
+    clearTimeout(snoozeTimerRef.current)
     audioPlayer.stop()
     audioPlayer.unload()
     loadedRef.current = false
     wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
 
-    setTimeout(() => {
-      setActiveAlarm(alarm.id)
+    snoozeTimerRef.current = setTimeout(() => {
+      useAlarmStore.getState().setActiveAlarm(alarm.id)
     }, alarm.snoozeMinutes * 60 * 1000)
 
-    setActiveAlarm(null)
+    onClose()
   }
 
   const snoozeLimit = alarm.maxSnoozes > 0 && snoozeCount >= alarm.maxSnoozes
@@ -167,5 +156,19 @@ export default function AlarmAlertOverlay() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AlarmAlertOverlay() {
+  const activeAlarmId = useAlarmStore((s) => s.activeAlarmId)
+  const setActiveAlarm = useAlarmStore((s) => s.setActiveAlarm)
+  const alarms = useAlarmStore((s) => s.alarms)
+
+  const alarm = alarms.find((a) => a.id === activeAlarmId)
+
+  if (!activeAlarmId || !alarm) return null
+
+  return (
+    <AlarmAlertContent alarm={alarm} onClose={() => setActiveAlarm(null)} />
   )
 }

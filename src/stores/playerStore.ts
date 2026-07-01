@@ -90,6 +90,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         if (repeat === 'all') {
           const shuffled = shuffleArray(queue)
           set({ currentTrack: shuffled[0], queue: shuffled, queueIndex: 0 })
+        } else {
+          set({ isPlaying: false })
         }
         return
       }
