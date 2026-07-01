@@ -242,13 +242,4 @@ npm run test    # Run tests
 
 ---
 
-## Deployment
 
-The app is a static PWA — deploy anywhere that serves static files:
-
-| Provider | Free Tier | Custom Domain |
-|---|---|---|
-| GitHub Pages | Unlimited | ✓ |
-| Vercel | Unlimited | ✓ |
-| Netlify | 100GB bandwidth | ✓ |
-| Cloudflare Pages | Unlimited | ✓ |
