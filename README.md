@@ -223,22 +223,9 @@ Alarm {
 
 ---
 
-## Implementation Plan
+## Demo
 
-Detailed implementation steps are in [PLAN.md](./PLAN.md).
-
-### Phases
-
-1. **Project scaffolding** — Vite + React + TS + Tailwind + PWA
-2. **Data layer** — IndexedDB schema, Zustand stores
-3. **Playlist management** — CRUD playlists, local file import
-4. **Music player** — Audio playback engine, queue management
-5. **Alarm engine** — Create/manage alarms, scheduling, trigger
-6. **YouTube/Spotify sources** — OAuth, API integration, search
-7. **UI — responsive** — Mobile-first layout, PWA install prompt
-8. **Service worker** — Offline support, alarm background trigger
-9. **Testing** — Unit, integration, E2E
-10. **Deployment** — GitHub Pages / Vercel / Netlify
+Try it live at [https://Thenewchicken55.github.io/AlarmPlaylist/](https://Thenewchicken55.github.io/AlarmPlaylist/)
 
 ---
 
