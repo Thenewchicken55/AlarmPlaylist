@@ -2,12 +2,14 @@ import { type ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
 import MiniPlayer from './MiniPlayer'
+import { useAudioPlayer } from '../../hooks/useAudioPlayer'
 
 interface AppShellProps {
   children: ReactNode
 }
 
 export default function AppShell({ children }: AppShellProps) {
+  useAudioPlayer()
   return (
     <div className="flex h-dvh">
       <Sidebar />

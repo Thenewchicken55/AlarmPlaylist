@@ -1,4 +1,3 @@
-import { useAudioPlayer } from '../hooks/useAudioPlayer'
 import { usePlayerStore } from '../stores/playerStore'
 import AlbumArt from '../components/player/AlbumArt'
 import TrackInfo from '../components/player/TrackInfo'
@@ -7,8 +6,6 @@ import PlaybackControls from '../components/player/PlaybackControls'
 import VolumeSlider from '../components/player/VolumeSlider'
 
 export default function PlayerPage() {
-  useAudioPlayer()
-
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   const progress = usePlayerStore((s) => s.progress)
   const duration = usePlayerStore((s) => s.duration)

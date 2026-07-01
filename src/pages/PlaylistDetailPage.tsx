@@ -6,6 +6,7 @@ import Button from '../components/ui/Button'
 import { usePlaylistStore } from '../stores/playlistStore'
 import { usePlayerStore } from '../stores/playerStore'
 import { useUIStore } from '../stores/uiStore'
+import type { Track } from '../types'
 import { pluralize } from '../utils/format'
 import { parseM3U, parsePLS } from '../utils/playlistParser'
 import { storeAudioFile } from '../db/audioStorage'
@@ -25,6 +26,7 @@ export default function PlaylistDetailPage() {
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist)
 
   const playQueue = usePlayerStore((s) => s.playQueue)
+  const playTrack = usePlayerStore((s) => s.playTrack)
   const currentTrack = usePlayerStore((s) => s.currentTrack)
 
   const showToast = useUIStore((s) => s.showToast)
@@ -130,8 +132,8 @@ export default function PlaylistDetailPage() {
     }
   }
 
-  function handlePlayTrack(_track: any, index: number) {
-    playQueue(playlist.tracks, index)
+  function handlePlayTrack(track: Track, index: number) {
+    playTrack(track, playlist.tracks, index)
     navigate('/player')
   }
 
