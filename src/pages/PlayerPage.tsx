@@ -9,7 +9,6 @@ export default function PlayerPage() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   const progress = usePlayerStore((s) => s.progress)
   const duration = usePlayerStore((s) => s.duration)
-  const setProgress = usePlayerStore((s) => s.setProgress)
 
   if (!currentTrack) {
     return (
@@ -34,7 +33,6 @@ export default function PlayerPage() {
           <ProgressBar
             progress={progress}
             duration={duration}
-            onSeek={setProgress}
           />
         </div>
 

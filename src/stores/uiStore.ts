@@ -8,14 +8,11 @@ interface UIState {
   sidebarOpen: boolean
   theme: Theme
   installPromptEvent: Event | null
-  toast: { message: string; type: 'success' | 'error' | 'info' } | null
 
   setPage: (page: Page) => void
   toggleSidebar: () => void
   setTheme: (theme: Theme) => void
   setInstallPrompt: (event: Event | null) => void
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void
-  dismissToast: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -23,7 +20,6 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: false,
   theme: (localStorage.getItem('theme') as Theme) ?? 'system',
   installPromptEvent: null,
-  toast: null,
 
   setPage: (page) => set({ currentPage: page }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
@@ -32,6 +28,4 @@ export const useUIStore = create<UIState>((set) => ({
     set({ theme })
   },
   setInstallPrompt: (event) => set({ installPromptEvent: event }),
-  showToast: (message, type = 'info') => set({ toast: { message, type } }),
-  dismissToast: () => set({ toast: null }),
 }))

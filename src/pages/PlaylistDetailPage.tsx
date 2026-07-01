@@ -5,8 +5,8 @@ import TrackList from '../components/playlist/TrackList'
 import Button from '../components/ui/Button'
 import { usePlaylistStore } from '../stores/playlistStore'
 import { usePlayerStore } from '../stores/playerStore'
-import { useUIStore } from '../stores/uiStore'
 import type { Track } from '../types'
+import { toast } from 'sonner'
 import { pluralize } from '../utils/format'
 import { parseM3U, parsePLS } from '../utils/playlistParser'
 import { storeAudioFile } from '../db/audioStorage'
@@ -29,8 +29,6 @@ export default function PlaylistDetailPage() {
   const playTrack = usePlayerStore((s) => s.playTrack)
   const currentTrack = usePlayerStore((s) => s.currentTrack)
 
-  const showToast = useUIStore((s) => s.showToast)
-
   useEffect(() => {
     loadPlaylists()
   }, [loadPlaylists])
@@ -49,7 +47,7 @@ export default function PlaylistDetailPage() {
   async function handleDelete() {
     if (confirm('Delete this playlist and all its tracks?')) {
       await deletePlaylist(playlist.id)
-      showToast('Playlist deleted', 'info')
+      toast.info('Playlist deleted')
       navigate('/playlists')
     }
   }
@@ -57,9 +55,9 @@ export default function PlaylistDetailPage() {
   async function handleImport(files: FileList) {
     try {
       await importLocalFiles(playlist.id, files)
-      showToast(`Imported ${files.length} ${pluralize(files.length, 'file')}`, 'success')
+      toast.success(`Imported ${files.length} ${pluralize(files.length, 'file')}`)
     } catch {
-      showToast('Failed to import files', 'error')
+      toast.error('Failed to import files')
     }
   }
 
@@ -75,14 +73,14 @@ export default function PlaylistDetailPage() {
         }
       }
       if (entries.length === 0) {
-        showToast('No audio files found in folder', 'info')
+        toast.info('No audio files found in folder')
         return
       }
       await importLocalFiles(playlist.id, entries as any)
-      showToast(`Imported ${entries.length} files from folder`, 'success')
+      toast.success(`Imported ${entries.length} files from folder`)
     } catch (err: any) {
       if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
-        showToast('Failed to import folder', 'error')
+        toast.error('Failed to import folder')
       }
     }
   }
@@ -96,7 +94,7 @@ export default function PlaylistDetailPage() {
       const tracks = ext === 'pls' ? parsePLS(text, file.name) : parseM3U(text, file.name)
 
       if (tracks.length === 0) {
-        showToast('No valid tracks found in playlist file', 'info')
+        toast.info('No valid tracks found in playlist file')
         return
       }
 
@@ -118,9 +116,9 @@ export default function PlaylistDetailPage() {
         await addTrack(playlist.id, track)
       }
 
-      showToast(`Imported ${tracks.length} tracks from ${file.name}`, 'success')
+      toast.success(`Imported ${tracks.length} tracks from ${file.name}`)
     } catch {
-      showToast('Failed to parse playlist file', 'error')
+      toast.error('Failed to parse playlist file')
     }
     e.target.value = ''
   }

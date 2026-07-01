@@ -3,6 +3,7 @@ import { AlarmClock, X } from 'lucide-react'
 import { audioPlayer } from '../../services/player'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
+import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
 import type { Track } from '../../types'
 
@@ -21,6 +22,7 @@ export default function AlarmAlertOverlay() {
   const playlists = usePlaylistStore((s) => s.playlists)
   const [snoozeCount, setSnoozeCount] = useState(0)
   const loadedRef = useRef(false)
+  const wasPlayingRef = useRef(false)
 
   const alarm = alarms.find((a) => a.id === activeAlarmId)
 
@@ -41,6 +43,10 @@ export default function AlarmAlertOverlay() {
 
     const alarm = alarmSafe
     const track = trackSafe
+
+    // Pause music player
+    wasPlayingRef.current = usePlayerStore.getState().isPlaying
+    usePlayerStore.getState().pause()
 
     async function playAlarm() {
       let url: string | undefined
@@ -84,6 +90,8 @@ export default function AlarmAlertOverlay() {
     audioPlayer.stop()
     audioPlayer.unload()
     loadedRef.current = false
+    if (wasPlayingRef.current) usePlayerStore.getState().resume()
+    wasPlayingRef.current = false
     setActiveAlarm(null)
     setSnoozeCount(0)
   }
@@ -94,6 +102,7 @@ export default function AlarmAlertOverlay() {
     audioPlayer.stop()
     audioPlayer.unload()
     loadedRef.current = false
+    wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
 
     setTimeout(() => {

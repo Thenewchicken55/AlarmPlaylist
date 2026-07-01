@@ -27,9 +27,12 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
 
   return (
     <div className="relative">
-      <button
+      <div
         onClick={onClick}
-        className="w-full rounded-xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-slate-700 hover:bg-slate-800/50"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick() }}
+        className="w-full cursor-pointer rounded-xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-slate-700 hover:bg-slate-800/50"
       >
         <div className="flex items-start gap-4">
           <div
@@ -59,7 +62,7 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
             <MoreVertical size={16} />
           </button>
         </div>
-      </button>
+      </div>
 
       {menuOpen && (
         <>

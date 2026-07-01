@@ -7,16 +7,19 @@ interface TrackRowProps {
   isPlaying?: boolean
   onPlay: () => void
   onRemove: () => void
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>
 }
 
-export default function TrackRow({ track, isPlaying, onPlay, onRemove }: TrackRowProps) {
+export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandleProps }: TrackRowProps) {
   return (
     <div
       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
         isPlaying ? 'bg-indigo-600/10' : 'hover:bg-slate-800'
       }`}
     >
-      <GripVertical size={16} className="cursor-grab text-slate-600 opacity-0 group-hover:opacity-100" />
+      <button {...dragHandleProps} className="cursor-grab rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100">
+        <GripVertical size={16} />
+      </button>
 
       <button
         onClick={onPlay}

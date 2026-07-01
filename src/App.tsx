@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import AppShell from './components/layout/AppShell'
-import Toast from './components/ui/Toast'
 import AlarmAlertOverlay from './components/alarm/AlarmAlertOverlay'
 import { useTheme } from './hooks/useTheme'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
@@ -31,7 +31,7 @@ export default function App() {
           <Route path="/spotify-callback" element={<SpotifyCallback />} />
         </Routes>
       </AppShell>
-      <Toast />
+      <Toaster position="bottom-center" />
       <AlarmAlertOverlay />
     </>
   )

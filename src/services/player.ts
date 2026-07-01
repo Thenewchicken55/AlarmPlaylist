@@ -3,7 +3,22 @@ import { Howl } from 'howler'
 type AudioEvents = {
   onEnd?: () => void
   onLoad?: () => void
-  onError?: (error: unknown) => void
+  onLoadError?: (error: unknown) => void
+  onPlayError?: (error: unknown) => void
+}
+
+function inferFormat(url: string): string | undefined {
+  const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase()
+  if (!ext) {
+    if (url.startsWith('blob:')) return undefined
+    return undefined
+  }
+  const map: Record<string, string> = {
+    mp3: 'mp3', wav: 'wav', ogg: 'ogg', flac: 'flac',
+    m4a: 'm4a', aac: 'aac', opus: 'opus', wma: 'wma',
+    webm: 'webm',
+  }
+  return map[ext]
 }
 
 class AudioPlayerService {
@@ -16,13 +31,16 @@ class AudioPlayerService {
     this.url = url
     this.events = events ?? {}
 
+    const format = inferFormat(url)
+
     this.howl = new Howl({
       src: [url],
+      format: format ? [format] : undefined,
       html5: true,
       onend: () => this.events.onEnd?.(),
       onload: () => this.events.onLoad?.(),
-      onloaderror: (_id, err) => this.events.onError?.(err),
-      onplayerror: (_id, err) => this.events.onError?.(err),
+      onloaderror: (_id, err) => this.events.onLoadError?.(err),
+      onplayerror: (_id, err) => this.events.onPlayError?.(err),
     })
   }
 

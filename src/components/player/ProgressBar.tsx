@@ -1,15 +1,15 @@
 import { useRef, useCallback } from 'react'
 import { formatDuration } from '../../utils/time'
-import { audioPlayer } from '../../services/player'
+import { useAudioSeek } from './AudioPlayerContext'
 
 interface ProgressBarProps {
   progress: number
   duration: number
-  onSeek: (percent: number) => void
 }
 
-export default function ProgressBar({ progress, duration, onSeek }: ProgressBarProps) {
+export default function ProgressBar({ progress, duration }: ProgressBarProps) {
   const barRef = useRef<HTMLDivElement>(null)
+  const seek = useAudioSeek()
 
   const handleSeek = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const bar = barRef.current
@@ -17,9 +17,8 @@ export default function ProgressBar({ progress, duration, onSeek }: ProgressBarP
     const rect = bar.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    onSeek(percent)
-    audioPlayer.seek(percent)
-  }, [onSeek])
+    seek(percent)
+  }, [seek])
 
   return (
     <div className="w-full">

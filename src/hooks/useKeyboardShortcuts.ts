@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { usePlayerStore } from '../stores/playerStore'
-import { audioPlayer } from '../services/player'
 
 export function useKeyboardShortcuts() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
@@ -11,7 +10,6 @@ export function useKeyboardShortcuts() {
   const prev = usePlayerStore((s) => s.prev)
   const volume = usePlayerStore((s) => s.volume)
   const setVolume = usePlayerStore((s) => s.setVolume)
-  const setProgress = usePlayerStore((s) => s.setProgress)
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -35,23 +33,20 @@ export function useKeyboardShortcuts() {
         case 'ArrowUp':
           e.preventDefault()
           setVolume(Math.min(100, volume + 5))
-          audioPlayer.setVolume(Math.min(100, volume + 5))
           break
         case 'ArrowDown':
           e.preventDefault()
           setVolume(Math.max(0, volume - 5))
-          audioPlayer.setVolume(Math.max(0, volume - 5))
           break
         case 'm':
         case 'M':
           e.preventDefault()
           setVolume(volume > 0 ? 0 : 70)
-          audioPlayer.setVolume(volume > 0 ? 0 : 70)
           break
       }
     }
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [currentTrack, isPlaying, pause, resume, next, prev, volume, setVolume, setProgress])
+  }, [currentTrack, isPlaying, pause, resume, next, prev, volume, setVolume])
 }

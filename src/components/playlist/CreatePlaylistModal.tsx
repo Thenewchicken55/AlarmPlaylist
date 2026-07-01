@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
+import { toast } from 'sonner'
 import { usePlaylistStore } from '../../stores/playlistStore'
-import { useUIStore } from '../../stores/uiStore'
 import { isYouTubeConnected, initYouTubeClient, authenticateYouTube, fetchYouTubePlaylists, fetchYouTubePlaylistTracks } from '../../services/youtube'
 import { isSpotifyConnected, authenticateSpotify, fetchSpotifyPlaylists, fetchSpotifyPlaylistTracks } from '../../services/spotify'
 import type { PlaylistSource, Playlist as PlaylistType } from '../../types'
@@ -26,7 +26,6 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
   const createPlaylist = usePlaylistStore((s) => s.createPlaylist)
   const addTrack = usePlaylistStore((s) => s.addTrack)
-  const showToast = useUIStore((s) => s.showToast)
 
   useEffect(() => {
     if (!open) {
@@ -39,7 +38,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
   async function handleYouTubeConnect() {
     const clientId = import.meta.env.VITE_YOUTUBE_CLIENT_ID
     if (!clientId) {
-      showToast('YouTube Client ID not configured. Set VITE_YOUTUBE_CLIENT_ID in .env', 'error')
+      toast.error('YouTube Client ID not configured. Set VITE_YOUTUBE_CLIENT_ID in .env')
       return
     }
     try {
@@ -47,17 +46,17 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       await authenticateYouTube()
       setYoutubeConnected(isYouTubeConnected())
       if (isYouTubeConnected()) {
-        showToast('YouTube connected!', 'success')
+        toast.success('YouTube connected!')
       }
     } catch {
-      showToast('YouTube authentication failed', 'error')
+      toast.error('YouTube authentication failed')
     }
   }
 
   function handleSpotifyConnect() {
     const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID
     if (!clientId) {
-      showToast('Spotify Client ID not configured. Set VITE_SPOTIFY_CLIENT_ID in .env', 'error')
+      toast.error('Spotify Client ID not configured. Set VITE_SPOTIFY_CLIENT_ID in .env')
       return
     }
     authenticateSpotify(clientId, window.location.origin + '/spotify-callback')
@@ -70,9 +69,9 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       if (source === 'youtube') playlists = await fetchYouTubePlaylists()
       else if (source === 'spotify') playlists = await fetchSpotifyPlaylists()
       setRemotePlaylists(playlists)
-      if (playlists.length === 0) showToast('No playlists found', 'info')
+      if (playlists.length === 0) toast.info('No playlists found')
     } catch {
-      showToast('Failed to fetch playlists', 'error')
+      toast.error('Failed to fetch playlists')
     } finally {
       setLoading(false)
     }
@@ -100,10 +99,10 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
         await addTrack(playlist.id, track)
       }
 
-      showToast(`Imported "${remotePlaylist.name}" (${tracks.length} tracks)`, 'success')
+      toast.success(`Imported "${remotePlaylist.name}" (${tracks.length} tracks)`)
       onClose()
     } catch {
-      showToast('Failed to import playlist', 'error')
+      toast.error('Failed to import playlist')
     } finally {
       setLoading(false)
     }
@@ -117,10 +116,10 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
     try {
       const nameInput = (e.target as HTMLFormElement).elements.namedItem('name') as HTMLInputElement
       await createPlaylist({ name: nameInput.value.trim(), source, color })
-      showToast('Playlist created', 'success')
+      toast.success('Playlist created')
       onClose()
     } catch {
-      showToast('Failed to create playlist', 'error')
+      toast.error('Failed to create playlist')
     } finally {
       setLoading(false)
     }

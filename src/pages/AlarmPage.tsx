@@ -3,8 +3,8 @@ import { Plus, AlarmClock } from 'lucide-react'
 import AlarmCard from '../components/alarm/AlarmCard'
 import AlarmFormModal from '../components/alarm/AlarmFormModal'
 import { useAlarmStore } from '../stores/alarmStore'
-import { useUIStore } from '../stores/uiStore'
 import { alarmScheduler } from '../services/alarmScheduler'
+import { toast } from 'sonner'
 import type { Alarm } from '../types'
 
 export default function AlarmPage() {
@@ -13,7 +13,6 @@ export default function AlarmPage() {
   const toggleAlarm = useAlarmStore((s) => s.toggleAlarm)
   const deleteAlarm = useAlarmStore((s) => s.deleteAlarm)
   const setActiveAlarm = useAlarmStore((s) => s.setActiveAlarm)
-  const showToast = useUIStore((s) => s.showToast)
 
   const [showForm, setShowForm] = useState(false)
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null)
@@ -47,7 +46,7 @@ export default function AlarmPage() {
     if (confirm('Delete this alarm?')) {
       await deleteAlarm(id)
       alarmScheduler.clearAlarm(id)
-      showToast('Alarm deleted', 'info')
+      toast.info('Alarm deleted')
     }
   }
 

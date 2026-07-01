@@ -7,6 +7,7 @@ import { getStorageInfo } from '../db/audioStorage'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { formatFileSize } from '../utils/format'
 import { checkStorageQuota, isPrivateBrowsing } from '../utils/storage'
+import { toast } from 'sonner'
 
 const themeOptions = [
   { value: 'system' as const, label: 'System', icon: Monitor },
@@ -19,7 +20,6 @@ export default function SettingsPage() {
   const setTheme = useUIStore((s) => s.setTheme)
   const installPromptEvent = useUIStore((s) => s.installPromptEvent)
 
-  const showToast = useUIStore((s) => s.showToast)
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [storageInfo, setStorageInfo] = useState({ totalFiles: 0, totalSize: 0 })
 
@@ -30,12 +30,12 @@ export default function SettingsPage() {
     getStorageInfo().then(setStorageInfo)
 
     if (isPrivateBrowsing()) {
-      showToast('Private browsing detected — data may not persist', 'info')
+      toast.info('Private browsing detected — data may not persist')
     }
 
     checkStorageQuota().then((info) => {
       if (info && !info.ok) {
-        showToast(`Storage at ${Math.round(info.percent * 100)}% — consider clearing old files`, 'info')
+        toast.info(`Storage at ${Math.round(info.percent * 100)}% — consider clearing old files`)
       }
     })
   }, [])

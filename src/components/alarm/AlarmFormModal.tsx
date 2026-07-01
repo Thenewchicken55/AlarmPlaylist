@@ -7,7 +7,7 @@ import TimePicker from '../ui/TimePicker'
 import DayPicker from '../ui/DayPicker'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
-import { useUIStore } from '../../stores/uiStore'
+import { toast } from 'sonner'
 import type { Alarm } from '../../types'
 
 interface AlarmFormModalProps {
@@ -33,7 +33,6 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
   const createAlarm = useAlarmStore((s) => s.createAlarm)
   const updateAlarm = useAlarmStore((s) => s.updateAlarm)
   const playlists = usePlaylistStore((s) => s.playlists)
-  const showToast = useUIStore((s) => s.showToast)
 
   useEffect(() => {
     if (editAlarm) {
@@ -86,7 +85,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
           snoozeMinutes,
           maxSnoozes,
         })
-        showToast('Alarm updated', 'success')
+        toast.success('Alarm updated')
       } else {
         await createAlarm({
           name: name.trim(),
@@ -101,11 +100,11 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
           snoozeMinutes,
           maxSnoozes,
         })
-        showToast('Alarm created', 'success')
+        toast.success('Alarm created')
       }
       onClose()
     } catch {
-      showToast('Failed to save alarm', 'error')
+      toast.error('Failed to save alarm')
     } finally {
       setLoading(false)
     }

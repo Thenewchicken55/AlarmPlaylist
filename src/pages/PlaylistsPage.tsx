@@ -4,14 +4,13 @@ import { Plus, Music } from 'lucide-react'
 import PlaylistCard from '../components/playlist/PlaylistCard'
 import CreatePlaylistModal from '../components/playlist/CreatePlaylistModal'
 import { usePlaylistStore } from '../stores/playlistStore'
-import { useUIStore } from '../stores/uiStore'
+import { toast } from 'sonner'
 
 export default function PlaylistsPage() {
   const navigate = useNavigate()
   const playlists = usePlaylistStore((s) => s.playlists)
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist)
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
-  const showToast = useUIStore((s) => s.showToast)
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
@@ -21,7 +20,7 @@ export default function PlaylistsPage() {
   async function handleDelete(id: string) {
     if (confirm('Delete this playlist and all its tracks?')) {
       await deletePlaylist(id)
-      showToast('Playlist deleted', 'info')
+      toast.info('Playlist deleted')
     }
   }
 
