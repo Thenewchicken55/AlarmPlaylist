@@ -48,9 +48,11 @@ export function useAudioPlayer() {
     prevTrackIdRef.current = trackId
 
     async function loadTrack() {
-      let url = track.url
-      if (!url && track.blobId) {
+      let url: string | undefined
+      if (track.blobId) {
         url = await getAudioUrl(track.blobId)
+      } else {
+        url = track.url
       }
       if (!url) return
 

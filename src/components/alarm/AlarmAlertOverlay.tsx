@@ -43,9 +43,11 @@ export default function AlarmAlertOverlay() {
     const track = trackSafe
 
     async function playAlarm() {
-      let url = track.url
-      if (!url && track.blobId) {
+      let url: string | undefined
+      if (track.blobId) {
         url = await getAudioUrl(track.blobId)
+      } else {
+        url = track.url
       }
       if (!url) return
 
