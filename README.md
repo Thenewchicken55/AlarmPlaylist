@@ -253,4 +253,22 @@ For **GitHub Pages deployment**, add these as [Actions secrets](https://github.c
 
 ---
 
+### YouTube Client ID Setup Details
 
+**Where to go**
+Go to console.cloud.google.com and make sure the correct project is selected in the top-left project picker (this trips people up a lot — you can have the right code but wrong project selected).
+In the left sidebar, click APIs & Services.
+Look for Google Auth Platform — this used to be called "OAuth consent screen," but since 2024 it's been reorganized under Google Auth Platform, split into tabs for Branding, Audience, and Data Access.
+
+If you don't see "Google Auth Platform" in the sidebar at all, it's usually because no OAuth-compatible API has been enabled on the project yet, or your account doesn't have Owner/Editor access — it only shows up once an API is turned on.
+
+**Setting it up the first time**
+If it's a brand new project, you'll see "Google Auth Platform not configured yet" — click Get started, which walks you through a short wizard: App name, support email, then Audience (pick External unless this is only for people inside your own Google Workspace org), then a contact email.
+
+**Adding test users**
+Once that's done, go to the Audience tab.
+Your app starts in "Testing" mode, and only accounts on the test users list can sign in — everyone else gets an access_blocked error.
+Click Add users, and enter your own email plus anyone else who needs to log in (teammates, QA, etc.) — up to 100 test users, and changes take effect immediately.
+
+One thing to know: test users' authorizations expire 7 days after they consent, so if someone stops being able to log in after a week, that's likely why — they just need to go through the consent screen again.
+Once you've got your test users added, that's the piece your Client ID needs — you don't have to publish the app to production or go through Google's verification process just to test it yourself.

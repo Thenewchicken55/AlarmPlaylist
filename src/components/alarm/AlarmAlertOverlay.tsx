@@ -20,7 +20,7 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
   const [snoozeCount, setSnoozeCount] = useState(0)
   const loadedRef = useRef(false)
   const wasPlayingRef = useRef(false)
-  const snoozeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const snoozeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const playlist = playlists.find((p) => p.id === alarm.playlistId)
   const track = playlist ? getRandomTrack(playlist.tracks, alarm.specificTrackId) : null
@@ -33,6 +33,7 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
     usePlayerStore.getState().pause()
 
     async function playAlarm() {
+      if (!track) return
       let url: string | undefined
       if (track.blobId) {
         url = await getAudioUrl(track.blobId)
