@@ -1,7 +1,8 @@
+import { nanoid } from 'nanoid'
 import type { Track } from '../types'
 
 function generateId(): string {
-  return crypto.randomUUID()
+  return nanoid()
 }
 
 export function parseM3U(content: string, basePath: string): Track[] {

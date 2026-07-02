@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { db } from '../db/db'
 import type { Alarm } from '../types'
@@ -31,7 +32,7 @@ interface AlarmState {
 }
 
 function generateId(): string {
-  return crypto.randomUUID()
+  return nanoid()
 }
 
 export const useAlarmStore = create<AlarmState>((set, get) => ({

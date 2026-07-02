@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
 import { handleSpotifyCallback } from '../services/spotify'
@@ -7,8 +7,12 @@ import { toast } from 'sonner'
 export default function SpotifyCallback() {
   const navigate = useNavigate()
   const [status, setStatus] = useState('Authenticating with Spotify...')
+  const calledRef = useRef(false)
 
   useEffect(() => {
+    if (calledRef.current) return
+    calledRef.current = true
+
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const error = params.get('error')

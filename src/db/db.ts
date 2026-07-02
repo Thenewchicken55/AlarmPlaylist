@@ -12,15 +12,3 @@ db.version(1).stores({
 })
 
 export { db }
-
-export async function initializeDB(): Promise<boolean> {
-  try {
-    await db.open()
-    return true
-  } catch (err) {
-    if (err instanceof Error && (err.name === 'SecurityError' || err.message?.includes('IndexedDB'))) {
-      console.warn('IndexedDB unavailable (private browsing?):', err.message)
-    }
-    return false
-  }
-}

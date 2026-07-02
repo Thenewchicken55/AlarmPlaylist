@@ -1,22 +1,31 @@
+import { format, intervalToDuration } from 'date-fns'
+
 export function formatTime(hour: number, minute: number): string {
-  const period = hour >= 12 ? 'PM' : 'AM'
-  const h = hour % 12 || 12
-  const m = minute.toString().padStart(2, '0')
-  return `${h}:${m} ${period}`
+  const d = new Date()
+  d.setHours(hour, minute, 0, 0)
+  return format(d, 'h:mm a')
 }
 
 export function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
+  const dur = intervalToDuration({ start: 0, end: seconds * 1000 })
+  const m = (dur.minutes ?? 0).toString().padStart(2, '0')
+  const s = (dur.seconds ?? 0).toString().padStart(2, '0')
+  if (dur.hours && dur.hours > 0) {
+    return `${dur.hours}:${m}:${s}`
+  }
+  return `${parseInt(m)}:${s}`
 }
 
 export function dayName(day: number): string {
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]
+  const d = new Date()
+  d.setDate(d.getDate() + ((day + 7 - d.getDay()) % 7))
+  return format(d, 'EEE')
 }
 
 export function dayNameLong(day: number): string {
-  return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day]
+  const d = new Date()
+  d.setDate(d.getDate() + ((day + 7 - d.getDay()) % 7))
+  return format(d, 'EEEE')
 }
 
 export function daysLabel(days: number[]): string {

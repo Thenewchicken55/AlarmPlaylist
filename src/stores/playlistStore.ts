@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { db } from '../db/db'
 import { storeAudioFile, deleteAudioFile, getAudioUrl } from '../db/audioStorage'
@@ -30,7 +31,7 @@ interface PlaylistState {
 }
 
 function generateId(): string {
-  return crypto.randomUUID()
+  return nanoid()
 }
 
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({

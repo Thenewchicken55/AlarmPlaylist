@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
-import { formatBytes, checkStorageQuota } from '../utils/storage'
+import { formatFileSize } from '../utils/format'
+import { checkStorageQuota } from '../utils/storage'
 
-describe('formatBytes', () => {
-  it('formats bytes', () => expect(formatBytes(0)).toBe('0 B'))
-  it('formats KB', () => expect(formatBytes(1024)).toBe('1.0 KB'))
-  it('formats MB', () => expect(formatBytes(1048576)).toBe('1.0 MB'))
-  it('formats large MB', () => expect(formatBytes(1073741824)).toBe('1024.0 MB'))
+describe('formatFileSize', () => {
+  it('formats bytes', () => expect(formatFileSize(0)).toBe('0 B'))
+  it('formats KB', () => expect(formatFileSize(1024)).toBe('1.0 KB'))
+  it('formats MB', () => expect(formatFileSize(1048576)).toBe('1.0 MB'))
+  it('formats large MB', () => expect(formatFileSize(1073741824)).toBe('1024.0 MB'))
 })
 
 describe('checkStorageQuota', () => {

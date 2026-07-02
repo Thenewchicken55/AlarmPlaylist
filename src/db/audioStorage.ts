@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import Dexie, { type EntityTable } from 'dexie'
 
 interface StoredAudio {
@@ -20,7 +21,7 @@ audioDb.version(1).stores({
 const blobUrlCache = new Map<string, string>()
 
 export async function storeAudioFile(file: File): Promise<string> {
-  const id = crypto.randomUUID()
+  const id = nanoid()
   await audioDb.files.put({ id, name: file.name, size: file.size, type: file.type, uploadedAt: Date.now(), data: file })
   return id
 }
