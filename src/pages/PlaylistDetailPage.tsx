@@ -9,7 +9,7 @@ import type { Track } from '../types'
 import { toast } from 'sonner'
 import { pluralize } from '../utils/format'
 import { parseM3U, parsePLS } from '../utils/playlistParser'
-import { storeAudioFile } from '../db/audioStorage'
+import { storeAudioFile, getAudioUrl } from '../db/audioStorage'
 import { getAudioDuration } from '../utils/audio'
 
 export default function PlaylistDetailPage() {
@@ -106,8 +106,7 @@ export default function PlaylistDetailPage() {
             const audioFile = new File([blob], track.title + '.mp3', { type: blob.type })
             const blobId = await storeAudioFile(audioFile)
             track.blobId = blobId
-            const url = URL.createObjectURL(blob)
-            track.url = url
+            track.url = await getAudioUrl(blobId)
             track.duration = await getAudioDuration(audioFile)
           } catch {
             track.url = undefined

@@ -42,8 +42,12 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
   loadAlarms: async () => {
     set({ loading: true })
-    const alarms = await db.alarms.toArray()
-    set({ alarms, loading: false })
+    try {
+      const alarms = await db.alarms.toArray()
+      set({ alarms, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   createAlarm: async (input) => {

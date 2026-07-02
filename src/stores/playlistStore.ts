@@ -41,8 +41,12 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   loadPlaylists: async () => {
     set({ loading: true })
-    const playlists = await db.playlists.toArray()
-    set({ playlists, loading: false })
+    try {
+      const playlists = await db.playlists.toArray()
+      set({ playlists, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   createPlaylist: async (input) => {

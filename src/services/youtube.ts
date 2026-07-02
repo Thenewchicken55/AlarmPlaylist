@@ -18,6 +18,23 @@ export function getYouTubeAccessToken(): string | null {
 }
 
 export async function initYouTubeClient(clientId: string): Promise<void> {
+  if (window.google?.accounts?.oauth2) {
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: (resp: { access_token?: string; error?: string }) => {
+        if (resp.access_token) {
+          accessToken = resp.access_token
+        }
+      },
+    }) as unknown as TokenClient
+    return
+  }
+
+  if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+    return
+  }
+
   return new Promise((resolve) => {
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
