@@ -86,7 +86,10 @@ export async function fetchYouTubePlaylists(): Promise<Playlist[]> {
   do {
     const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&mine=true&maxResults=50&pageToken=${pageToken}`
     const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
-    if (!res.ok) throw new Error('Failed to fetch YouTube playlists')
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(`YouTube API Error: ${errData.error?.message || res.statusText}`)
+    }
     const data = await res.json()
 
     for (const item of data.items || []) {
@@ -113,7 +116,10 @@ export async function fetchYouTubePlaylistTracks(playlistId: string): Promise<Tr
   do {
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&pageToken=${pageToken}`
     const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
-    if (!res.ok) throw new Error('Failed to fetch YouTube playlist items')
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(`YouTube API Error: ${errData.error?.message || res.statusText}`)
+    }
     const data = await res.json()
 
     for (const item of data.items || []) {
