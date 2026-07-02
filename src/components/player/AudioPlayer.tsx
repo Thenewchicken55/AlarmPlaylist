@@ -3,6 +3,7 @@ import ReactHowler from 'react-howler'
 import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
 import AudioPlayerContext from './AudioPlayerContext'
+import { toast } from 'sonner'
 
 function inferFormat(url: string): string[] | undefined {
   const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase()
@@ -27,6 +28,40 @@ export default function AudioPlayer() {
   // Track ID ref for guarding stale callbacks
   const trackIdRef = useRef(currentTrack?.id)
 
+  // Track consecutive skip count to stop runaway cascades
+  const skipCountRef = useRef(0)
+  const lastSkipTimeRef = useRef(0)
+
+  function skipWithWarning(trackTitle: string, reason: string) {
+    const now = Date.now()
+    // Reset skip counter if it's been more than 2 seconds since the last skip
+    if (now - lastSkipTimeRef.current > 2000) {
+      skipCountRef.current = 0
+    }
+    skipCountRef.current++
+    lastSkipTimeRef.current = now
+
+    console.warn(`Skipping "${trackTitle}": ${reason}`)
+
+    // Show a toast for the first few skips, then a summary
+    if (skipCountRef.current <= 3) {
+      toast.warning(`Skipped "${trackTitle}" — ${reason}`)
+    } else if (skipCountRef.current === 4) {
+      toast.warning('Skipping more tracks with missing audio data...')
+    }
+
+    // Stop the cascade if we've skipped too many in a row
+    const { queue } = usePlayerStore.getState()
+    if (skipCountRef.current >= queue.length) {
+      toast.error('No playable tracks found — audio files may need to be re-imported')
+      usePlayerStore.getState().stop()
+      return
+    }
+
+    // Small delay to prevent synchronous cascade that makes the UI unresponsive
+    setTimeout(() => next(), 50)
+  }
+
   // Resolve URL when track changes
   useEffect(() => {
     // Reset URL immediately to force ReactHowler to destroy the old Howl
@@ -47,14 +82,14 @@ export default function AudioPlayer() {
       } else {
         resolvedUrl = track.url
       }
-      if (!resolvedUrl || cancelled) {
-        if (!resolvedUrl && !cancelled) {
-          console.warn('No audio URL for:', track.title, '- skipping')
-          next()
-        }
+      if (cancelled) return
+      if (!resolvedUrl) {
+        skipWithWarning(track.title, 'audio data missing (try re-importing)')
         return
       }
 
+      // Reset skip counter on successful URL resolution
+      skipCountRef.current = 0
       setUrl(resolvedUrl)
       setFormat(inferFormat(resolvedUrl))
     }
@@ -102,14 +137,20 @@ export default function AudioPlayer() {
         volume={volume / 100}
         html5
         onLoad={() => {
+          // Successful load — reset skip counter
+          skipCountRef.current = 0
           const dur = howlerRef.current?.howler?.duration() ?? 0
           setDuration(dur)
         }}
-        onEnd={() => next()}
+        onEnd={() => {
+          // Normal track end — reset skip counter
+          skipCountRef.current = 0
+          next()
+        }}
         onLoadError={(_id, err) => {
           console.error('Failed to load audio:', currentTrack?.title, err)
           if (trackIdRef.current !== currentTrack?.id) return
-          next()
+          skipWithWarning(currentTrack?.title ?? 'Unknown', 'failed to load audio')
         }}
       />
     </AudioPlayerContext>
