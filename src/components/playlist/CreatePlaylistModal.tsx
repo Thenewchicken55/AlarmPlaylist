@@ -189,7 +189,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
         {showRemoteConfig && (
           <div className="space-y-4">
             <p className="text-sm text-slate-400">
-              Import a YouTube playlist. Note: playback will use YouTube thumbnails as references.
+              Import a YouTube playlist. Tracks will play through the embedded YouTube player.
             </p>
 
             {!youtubeConnected && (

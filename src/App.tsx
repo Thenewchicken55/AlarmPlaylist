@@ -11,6 +11,8 @@ import { useAlarmScheduler } from './hooks/useAlarmScheduler'
 import { useAlarmStore } from './stores/alarmStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { alarmScheduler } from './services/alarmScheduler'
+import YouTubePlayerHost from './components/player/YouTubePlayerHost'
+import { initYouTubeClient, restoreYouTubeSession } from './services/youtube'
 import AlarmPage from './pages/AlarmPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
@@ -35,6 +37,16 @@ export default function App() {
     loadPlaylists()
   }, [loadPlaylists])
 
+  // Restore YouTube OAuth session on startup
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_YOUTUBE_CLIENT_ID
+    if (clientId) {
+      initYouTubeClient(clientId).then(() => {
+        restoreYouTubeSession()
+      })
+    }
+  }, [])
+
   useEffect(() => {
     function handleSWMessage(event: MessageEvent) {
       if (event.data?.type === 'PERIODIC_ALARM_CHECK') {
@@ -46,6 +58,7 @@ export default function App() {
   }, [alarms])
   return (
     <>
+      <YouTubePlayerHost />
       <AppShell>
         <Routes>
           <Route path="/" element={<Navigate to="/alarms" replace />} />
