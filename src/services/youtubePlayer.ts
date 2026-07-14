@@ -1,9 +1,4 @@
-type YouTubeEvents = {
-  onEnd?: () => void
-  onLoad?: () => void
-  onLoadError?: (error: unknown) => void
-  onPlayError?: (error: unknown) => void
-}
+import type { Player, PlayerEvents } from './playerTypes'
 
 declare global {
   interface Window {
@@ -50,13 +45,13 @@ interface YTPlayer {
   destroy: () => void
 }
 
-class YouTubePlayerService {
+class YouTubePlayerService implements Player {
   private player: YTPlayer | null = null
   private ready = false
   private initPromise: Promise<void> | null = null
 
   private videoId: string | null = null
-  private _events: YouTubeEvents = {}
+  private _events: PlayerEvents = {}
   private loadTimeout: ReturnType<typeof setTimeout> | null = null
   private fadeInterval: ReturnType<typeof setInterval> | null = null
 
