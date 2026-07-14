@@ -25,6 +25,7 @@ export async function initYouTubeClient(clientId: string): Promise<void> {
       callback: (resp: { access_token?: string; error?: string }) => {
         if (resp.access_token) {
           accessToken = resp.access_token
+          localStorage.setItem('youtube_access_token', accessToken)
         }
       },
     }) as unknown as TokenClient
@@ -49,6 +50,7 @@ export async function initYouTubeClient(clientId: string): Promise<void> {
         callback: (resp: { access_token?: string; error?: string }) => {
           if (resp.access_token) {
             accessToken = resp.access_token
+            localStorage.setItem('youtube_access_token', accessToken)
           }
         },
       }) as unknown as TokenClient
@@ -70,6 +72,7 @@ export async function authenticateYouTube(): Promise<string | null> {
     const check = setInterval(() => {
       if (accessToken) {
         clearInterval(check)
+        localStorage.setItem('youtube_access_token', accessToken)
         resolve(accessToken)
       }
     }, 200)
@@ -79,6 +82,31 @@ export async function authenticateYouTube(): Promise<string | null> {
       resolve(null)
     }, 30000)
   })
+}
+
+export async function restoreYouTubeSession(): Promise<boolean> {
+  const stored = localStorage.getItem('youtube_access_token')
+  if (!stored) return false
+
+  accessToken = stored
+
+  try {
+    const res = await fetch('https://www.googleapis.com/youtube/v3/channels?part=id&mine=true', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (res.ok) return true
+  } catch {
+    // Token expired or network error — handled below
+  }
+
+  accessToken = null
+  localStorage.removeItem('youtube_access_token')
+  return false
+}
+
+export function disconnectYouTube(): void {
+  accessToken = null
+  localStorage.removeItem('youtube_access_token')
 }
 
 export async function fetchYouTubePlaylists(): Promise<Playlist[]> {
