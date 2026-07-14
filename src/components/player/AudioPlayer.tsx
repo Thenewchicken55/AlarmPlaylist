@@ -125,6 +125,7 @@ export default function AudioPlayer() {
         youtubePlayer.stop()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack?.id])
 
   // Progress tracking
@@ -152,6 +153,7 @@ export default function AudioPlayer() {
     }
 
     return () => cancelAnimationFrame(animFrameRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, url, isYouTube, setProgress])
 
   // Volume sync for YouTube

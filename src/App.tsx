@@ -12,7 +12,6 @@ import { useAlarmStore } from './stores/alarmStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { alarmScheduler } from './services/alarmScheduler'
 import YouTubePlayerHost from './components/player/YouTubePlayerHost'
-import { initYouTubeClient, restoreYouTubeSession } from './services/youtube'
 import AlarmPage from './pages/AlarmPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
@@ -36,16 +35,6 @@ export default function App() {
   useEffect(() => {
     loadPlaylists()
   }, [loadPlaylists])
-
-  // Restore YouTube OAuth session on startup
-  useEffect(() => {
-    const clientId = import.meta.env.VITE_YOUTUBE_CLIENT_ID
-    if (clientId) {
-      initYouTubeClient(clientId).then(() => {
-        restoreYouTubeSession()
-      })
-    }
-  }, [])
 
   useEffect(() => {
     function handleSWMessage(event: MessageEvent) {

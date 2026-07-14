@@ -1,172 +1,85 @@
-import type { Playlist, Track } from '../types'
+import type { Track } from '../types'
 
-const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly'
-
-type TokenClient = {
-  requestAccessToken: (overrideConfig?: { hint?: string }) => void
-}
-
-let tokenClient: TokenClient | null = null
-let accessToken: string | null = null
-
-export function isYouTubeConnected(): boolean {
-  return !!accessToken
-}
-
-export function getYouTubeAccessToken(): string | null {
-  return accessToken
-}
-
-export async function initYouTubeClient(clientId: string): Promise<void> {
-  if (window.google?.accounts?.oauth2) {
-    tokenClient = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: SCOPES,
-      callback: (resp: { access_token?: string; error?: string }) => {
-        if (resp.access_token) {
-          accessToken = resp.access_token
-          localStorage.setItem('youtube_access_token', accessToken)
-        }
-      },
-    }) as unknown as TokenClient
-    return
+type YouTubePlaylistItem = {
+  contentDetails?: { videoId?: string }
+  snippet: {
+    title: string
+    videoOwnerChannelTitle?: string
+    thumbnails?: { default?: { url: string } }
   }
-
-  if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-    return
-  }
-
-  return new Promise((resolve) => {
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.onload = () => {
-      if (!window.google?.accounts?.oauth2) {
-        resolve()
-        return
-      }
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: SCOPES,
-        callback: (resp: { access_token?: string; error?: string }) => {
-          if (resp.access_token) {
-            accessToken = resp.access_token
-            localStorage.setItem('youtube_access_token', accessToken)
-          }
-        },
-      }) as unknown as TokenClient
-      resolve()
-    }
-    document.body.appendChild(script)
-  })
 }
 
-export async function authenticateYouTube(): Promise<string | null> {
-  return new Promise((resolve) => {
-    if (!tokenClient) {
-      resolve(null)
-      return
-    }
+const API_BASE = 'https://www.googleapis.com/youtube/v3'
 
-    tokenClient.requestAccessToken()
-
-    const check = setInterval(() => {
-      if (accessToken) {
-        clearInterval(check)
-        localStorage.setItem('youtube_access_token', accessToken)
-        resolve(accessToken)
-      }
-    }, 200)
-
-    setTimeout(() => {
-      clearInterval(check)
-      resolve(null)
-    }, 30000)
-  })
-}
-
-export async function restoreYouTubeSession(): Promise<boolean> {
-  const stored = localStorage.getItem('youtube_access_token')
-  if (!stored) return false
-
-  accessToken = stored
-
+export function parseYouTubePlaylistUrl(url: string): string | null {
   try {
-    const res = await fetch('https://www.googleapis.com/youtube/v3/channels?part=id&mine=true', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-    if (res.ok) return true
+    const u = new URL(url)
+    const list = u.searchParams.get('list')
+    if (list) return list
   } catch {
-    // Token expired or network error — handled below
+    // Not a valid URL
   }
-
-  accessToken = null
-  localStorage.removeItem('youtube_access_token')
-  return false
+  if (/^[a-zA-Z0-9_-]{11,34}$/.test(url)) return url
+  return null
 }
 
-export function disconnectYouTube(): void {
-  accessToken = null
-  localStorage.removeItem('youtube_access_token')
-}
-
-export async function fetchYouTubePlaylists(): Promise<Playlist[]> {
-  if (!accessToken) return []
-  const playlists: Playlist[] = []
+async function fetchWithPagination<T>(
+  endpoint: string,
+  params: Record<string, string>,
+  extractItem: (item: YouTubePlaylistItem) => T | null,
+): Promise<T[]> {
+  const items: T[] = []
   let pageToken = ''
 
   do {
-    const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&mine=true&maxResults=50&pageToken=${pageToken}`
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+    const query = new URLSearchParams({ ...params, pageToken, maxResults: '50' })
+    const res = await fetch(`${API_BASE}/${endpoint}?${query}`)
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      throw new Error(`YouTube API Error: ${errData.error?.message || res.statusText}`)
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err?.error?.message || `YouTube API error: ${res.status}`)
     }
-    const data = await res.json()
+    const data: { items?: YouTubePlaylistItem[]; nextPageToken?: string } = await res.json()
 
-    for (const item of data.items || []) {
-      playlists.push({
-        id: item.id,
-        name: item.snippet.title,
-        source: 'youtube',
-        tracks: [],
-        color: '#ff0000',
-        createdAt: new Date(item.snippet.publishedAt).getTime(),
-      })
+    for (const item of data.items ?? []) {
+      const extracted = extractItem(item)
+      if (extracted) items.push(extracted)
     }
     pageToken = data.nextPageToken || ''
   } while (pageToken)
 
-  return playlists
+  return items
 }
 
-export async function fetchYouTubePlaylistTracks(playlistId: string): Promise<Track[]> {
-  if (!accessToken) return []
-  const tracks: Track[] = []
-  let pageToken = ''
+export async function fetchYouTubePlaylist(
+  playlistId: string,
+  apiKey: string,
+): Promise<{ title: string; tracks: Track[] }> {
+  const infoUrl = `${API_BASE}/playlists?part=snippet&id=${playlistId}&key=${apiKey}`
+  const infoRes = await fetch(infoUrl)
+  if (!infoRes.ok) {
+    const err = await infoRes.json().catch(() => ({}))
+    throw new Error(err?.error?.message || `YouTube API error: ${infoRes.status}`)
+  }
+  const infoData = await infoRes.json()
+  const title = infoData.items?.[0]?.snippet?.title ?? 'Untitled Playlist'
 
-  do {
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&pageToken=${pageToken}`
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      throw new Error(`YouTube API Error: ${errData.error?.message || res.statusText}`)
-    }
-    const data = await res.json()
-
-    for (const item of data.items || []) {
-      const snippet = item.snippet
-      tracks.push({
-        id: item.id || item.contentDetails?.videoId,
-        title: snippet.title,
-        artist: snippet.videoOwnerChannelTitle || 'YouTube',
+  const tracks = await fetchWithPagination<Track>(
+    'playlistItems',
+    { part: 'snippet,contentDetails', playlistId, key: apiKey },
+    (item: YouTubePlaylistItem) => {
+      const videoId = item.contentDetails?.videoId
+      if (!videoId) return null
+      return {
+        id: videoId,
+        title: item.snippet.title,
+        artist: item.snippet.videoOwnerChannelTitle || 'YouTube',
         duration: 0,
-        thumbnail: snippet.thumbnails?.default?.url,
-        source: 'youtube',
-        sourceId: item.contentDetails?.videoId,
-      })
-    }
-    pageToken = data.nextPageToken || ''
-  } while (pageToken)
+        thumbnail: item.snippet.thumbnails?.default?.url,
+        source: 'youtube' as const,
+        sourceId: videoId,
+      }
+    },
+  )
 
-  return tracks
+  return { title, tracks }
 }
