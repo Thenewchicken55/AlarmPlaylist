@@ -72,12 +72,13 @@ function AlarmAlertContent({
                 }
               }, 100)
 
+              // Safety log — don't clear the interval; let it keep polling so
+              // slow-starting videos (buffering >3s) still get unmute + volume/fade
               setTimeout(() => {
-                clearInterval(check)
                 if (!youtubePlayer.isPlaying()) {
-                  console.warn('AlarmPlaylist: YouTube autoplay blocked')
+                  console.warn('AlarmPlaylist: YouTube playback not started after 30s')
                 }
-              }, 3000)
+              }, 30000)
             },
             onLoadError: (err) => {
               console.error('AlarmPlaylist: YouTube load error', alarm.name, track.title, err)

@@ -3,15 +3,9 @@ import ReactHowler from 'react-howler'
 import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
 import { youtubePlayer } from '../../services/youtubePlayer'
+import { inferFormat } from '../../utils/audio'
 import AudioPlayerContext from './AudioPlayerContext'
 import { toast } from 'sonner'
-
-function inferFormat(url: string): string[] | undefined {
-  const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase()
-  if (!ext) return undefined
-  const known = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus', 'wma', 'webm'] as const
-  return known.includes(ext as (typeof known)[number]) ? [ext] : undefined
-}
 
 export default function AudioPlayer() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
@@ -91,7 +85,8 @@ export default function AudioPlayer() {
         onLoadError: (err) => {
           console.error('YouTube load error:', track.title, err)
           if (cancelled || trackIdRef.current !== track.id) return
-          skipWithWarning(track.title, 'YouTube: failed to load')
+          const msg = err instanceof Error ? err.message : 'YouTube: failed to load'
+          skipWithWarning(track.title, msg)
         },
         onPlayError: (err) => {
           console.error('YouTube play error:', track.title, err)
@@ -113,7 +108,8 @@ export default function AudioPlayer() {
 
         skipCountRef.current = 0
         setUrl(resolvedUrl)
-        setFormat(inferFormat(resolvedUrl))
+        const fmt = inferFormat(resolvedUrl)
+        setFormat(fmt ? [fmt] : undefined)
       }
 
       resolveUrl()
@@ -122,7 +118,7 @@ export default function AudioPlayer() {
     return () => {
       cancelled = true
       if (track.source === 'youtube') {
-        youtubePlayer.stop()
+        youtubePlayer.unload()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

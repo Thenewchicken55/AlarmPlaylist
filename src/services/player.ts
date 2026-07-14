@@ -1,38 +1,13 @@
 import { Howl } from 'howler'
+import { inferFormat } from '../utils/audio'
+import type { Player, PlayerEvents } from './playerTypes'
 
-type AudioEvents = {
-  onEnd?: () => void
-  onLoad?: () => void
-  onLoadError?: (error: unknown) => void
-  onPlayError?: (error: unknown) => void
-}
-
-function inferFormat(url: string): string | undefined {
-  const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase()
-  if (!ext) {
-    if (url.startsWith('blob:')) return undefined
-    return undefined
-  }
-  const map: Record<string, string> = {
-    mp3: 'mp3',
-    wav: 'wav',
-    ogg: 'ogg',
-    flac: 'flac',
-    m4a: 'm4a',
-    aac: 'aac',
-    opus: 'opus',
-    wma: 'wma',
-    webm: 'webm',
-  }
-  return map[ext]
-}
-
-class AudioPlayerService {
+class AudioPlayerService implements Player {
   private howl: Howl | null = null
   private url: string | null = null
-  private events: AudioEvents = {}
+  private events: PlayerEvents = {}
 
-  load(url: string, events?: AudioEvents) {
+  load(url: string, events?: PlayerEvents) {
     this.unload()
     this.url = url
     this.events = events ?? {}
@@ -74,7 +49,7 @@ class AudioPlayerService {
   }
 
   fade(from: number, to: number, duration: number) {
-    this.howl?.fade(from / 100, to / 100, duration)
+    this.howl?.fade(from / 100, to / 100, duration / 1000)
   }
 
   duration(): number {

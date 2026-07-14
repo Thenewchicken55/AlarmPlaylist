@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { pluralize } from '../utils/format'
 import { parseM3U, parsePLS } from '../utils/playlistParser'
 import { storeAudioFile, getAudioUrl } from '../db/audioStorage'
-import { getAudioDuration } from '../utils/audio'
+import { getAudioDuration, isAudioExtension } from '../utils/audio'
 
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -67,9 +67,9 @@ export default function PlaylistDetailPage() {
         window as unknown as { showDirectoryPicker: () => Promise<FileSystemDirectoryHandle> }
       ).showDirectoryPicker()
       const entries: File[] = []
-      const audioExts = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.opus', '.wma'])
       for await (const entry of handle.values()) {
-        if (entry.kind === 'file' && audioExts.has(entry.name.substring(entry.name.lastIndexOf('.')).toLowerCase())) {
+        const ext = entry.name.substring(entry.name.lastIndexOf('.'))
+        if (entry.kind === 'file' && isAudioExtension(ext)) {
           const file = await entry.getFile()
           entries.push(file)
         }
