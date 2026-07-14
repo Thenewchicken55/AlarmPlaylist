@@ -75,6 +75,7 @@ export default function AlarmPage() {
       )}
 
       <AlarmFormModal
+        key={editingAlarm?.id ?? 'new'}
         open={showForm}
         onClose={handleCloseForm}
         editAlarm={editingAlarm}

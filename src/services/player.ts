@@ -14,8 +14,14 @@ function inferFormat(url: string): string | undefined {
     return undefined
   }
   const map: Record<string, string> = {
-    mp3: 'mp3', wav: 'wav', ogg: 'ogg', flac: 'flac',
-    m4a: 'm4a', aac: 'aac', opus: 'opus', wma: 'wma',
+    mp3: 'mp3',
+    wav: 'wav',
+    ogg: 'ogg',
+    flac: 'flac',
+    m4a: 'm4a',
+    aac: 'aac',
+    opus: 'opus',
+    wma: 'wma',
     webm: 'webm',
   }
   return map[ext]

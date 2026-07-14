@@ -6,10 +6,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 export default function Card({ children, className = '', ...props }: CardProps) {
   return (
-    <div
-      className={`rounded-xl border border-slate-800 bg-slate-900 p-4 ${className}`}
-      {...props}
-    >
+    <div className={`rounded-xl border border-slate-800 bg-slate-900 p-4 ${className}`} {...props}>
       {children}
     </div>
   )

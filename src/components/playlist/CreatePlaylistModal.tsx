@@ -1,21 +1,44 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { toast } from 'sonner'
 import { usePlaylistStore } from '../../stores/playlistStore'
-import { isYouTubeConnected, initYouTubeClient, authenticateYouTube, fetchYouTubePlaylists, fetchYouTubePlaylistTracks } from '../../services/youtube'
-import { isSpotifyConnected, authenticateSpotify, fetchSpotifyPlaylists, fetchSpotifyPlaylistTracks } from '../../services/spotify'
+import {
+  isYouTubeConnected,
+  initYouTubeClient,
+  authenticateYouTube,
+  fetchYouTubePlaylists,
+  fetchYouTubePlaylistTracks,
+} from '../../services/youtube'
+import {
+  isSpotifyConnected,
+  authenticateSpotify,
+  fetchSpotifyPlaylists,
+  fetchSpotifyPlaylistTracks,
+} from '../../services/spotify'
 import type { PlaylistSource, Playlist as PlaylistType } from '../../types'
 
-const spotifyRedirectUri = import.meta.env.VITE_SPOTIFY_REDIRECT_URI ?? `${window.location.origin}${import.meta.env.BASE_URL}spotify-callback`
+const spotifyRedirectUri =
+  import.meta.env.VITE_SPOTIFY_REDIRECT_URI ?? `${window.location.origin}${import.meta.env.BASE_URL}spotify-callback`
 
 interface CreatePlaylistModalProps {
   open: boolean
   onClose: () => void
 }
 
-const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6']
+const colors = [
+  '#6366f1',
+  '#8b5cf6',
+  '#ec4899',
+  '#f43f5e',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#06b6d4',
+  '#3b82f6',
+]
 
 export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistModalProps) {
   const [source, setSource] = useState<PlaylistSource>('local')
@@ -28,14 +51,6 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
   const createPlaylist = usePlaylistStore((s) => s.createPlaylist)
   const addTrack = usePlaylistStore((s) => s.addTrack)
-
-  useEffect(() => {
-    if (!open) {
-      setSource('local')
-      setSelectedRemoteId(null)
-      setRemotePlaylists([])
-    }
-  }, [open])
 
   async function handleYouTubeConnect() {
     const clientId = import.meta.env.VITE_YOUTUBE_CLIENT_ID
@@ -86,17 +101,19 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       const remotePlaylist = remotePlaylists.find((p) => p.id === selectedRemoteId)
       if (!remotePlaylist) return
 
-      const tracks = source === 'youtube'
-        ? await fetchYouTubePlaylistTracks(selectedRemoteId)
-        : await fetchSpotifyPlaylistTracks(selectedRemoteId)
+      const tracks =
+        source === 'youtube'
+          ? await fetchYouTubePlaylistTracks(selectedRemoteId)
+          : await fetchSpotifyPlaylistTracks(selectedRemoteId)
 
       const playlist = await createPlaylist({
         name: remotePlaylist.name,
         source,
         color,
-        sourceUrl: source === 'spotify'
-          ? `https://open.spotify.com/playlist/${selectedRemoteId}`
-          : `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
+        sourceUrl:
+          source === 'spotify'
+            ? `https://open.spotify.com/playlist/${selectedRemoteId}`
+            : `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
       })
 
       for (const track of tracks) {
@@ -141,7 +158,11 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
               <button
                 key={s}
                 type="button"
-                onClick={() => { setSource(s); setSelectedRemoteId(null); setRemotePlaylists([]) }}
+                onClick={() => {
+                  setSource(s)
+                  setSelectedRemoteId(null)
+                  setRemotePlaylists([])
+                }}
                 className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium capitalize transition-colors ${
                   source === s
                     ? 'border-indigo-500 bg-indigo-600/20 text-indigo-400'
@@ -176,8 +197,12 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
-              <Button type="submit" loading={loading}>Create</Button>
+              <Button variant="secondary" type="button" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={loading}>
+                Create
+              </Button>
             </div>
           </form>
         )}
@@ -217,7 +242,9 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
                     >
                       <option value="">Choose a playlist...</option>
                       {remotePlaylists.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -226,7 +253,9 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
             ) : null}
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="secondary" onClick={onClose}>Cancel</Button>
+              <Button variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
               {selectedRemoteId && (
                 <Button onClick={handleImportRemote} loading={loading}>
                   Import

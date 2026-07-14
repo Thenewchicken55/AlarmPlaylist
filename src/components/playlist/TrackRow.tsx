@@ -17,7 +17,10 @@ export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandl
         isPlaying ? 'bg-indigo-600/10' : 'hover:bg-slate-800'
       }`}
     >
-      <button {...dragHandleProps} className="cursor-grab rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100">
+      <button
+        {...dragHandleProps}
+        className="cursor-grab rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100"
+      >
         <GripVertical size={16} />
       </button>
 

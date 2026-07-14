@@ -14,9 +14,7 @@ export default function AlarmCard({ alarm, onToggle, onEdit, onDelete }: AlarmCa
   return (
     <div
       className={`rounded-xl border p-4 transition-colors ${
-        alarm.enabled
-          ? 'border-slate-700 bg-slate-900'
-          : 'border-slate-800 bg-slate-900/50 opacity-60'
+        alarm.enabled ? 'border-slate-700 bg-slate-900' : 'border-slate-800 bg-slate-900/50 opacity-60'
       }`}
     >
       <div className="flex items-center gap-4">

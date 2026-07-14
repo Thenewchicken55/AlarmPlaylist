@@ -17,7 +17,12 @@ interface TrackListProps {
   onImportFiles: (files: FileList) => void
 }
 
-function SortableTrackRow({ track, isPlaying, onPlay, onRemove }: {
+function SortableTrackRow({
+  track,
+  isPlaying,
+  onPlay,
+  onRemove,
+}: {
   track: Track
   isPlaying: boolean
   onPlay: () => void
@@ -42,12 +47,17 @@ function SortableTrackRow({ track, isPlaying, onPlay, onRemove }: {
   )
 }
 
-export default function TrackList({ tracks, currentTrackId, onPlay, onRemove, onReorder, onImportFiles }: TrackListProps) {
+export default function TrackList({
+  tracks,
+  currentTrackId,
+  onPlay,
+  onRemove,
+  onReorder,
+  onImportFiles,
+}: TrackListProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  )
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event

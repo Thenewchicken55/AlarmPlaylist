@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
@@ -17,44 +17,22 @@ interface AlarmFormModalProps {
 }
 
 export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormModalProps) {
-  const [name, setName] = useState('')
-  const [hour, setHour] = useState(7)
-  const [minute, setMinute] = useState(0)
-  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5])
-  const [playlistId, setPlaylistId] = useState<string | null>(null)
-  const [specificTrackId, setSpecificTrackId] = useState<string | null>(null)
-  const [volume, setVolume] = useState(70)
-  const [fadeIn, setFadeIn] = useState(true)
-  const [fadeInDuration] = useState(30)
-  const [snoozeMinutes] = useState(5)
-  const [maxSnoozes] = useState(3)
+  const [name, setName] = useState(editAlarm?.name ?? '')
+  const [hour, setHour] = useState(editAlarm?.hour ?? 7)
+  const [minute, setMinute] = useState(editAlarm?.minute ?? 0)
+  const [days, setDays] = useState<number[]>(editAlarm?.days ?? [1, 2, 3, 4, 5])
+  const [playlistId, setPlaylistId] = useState<string | null>(editAlarm?.playlistId ?? null)
+  const [specificTrackId, setSpecificTrackId] = useState<string | null>(editAlarm?.specificTrackId ?? null)
+  const [volume, setVolume] = useState(editAlarm?.volume ?? 70)
+  const [fadeIn, setFadeIn] = useState(editAlarm?.fadeIn ?? false)
+  const [fadeInDuration] = useState(editAlarm?.fadeInDuration ?? 5)
+  const [snoozeMinutes] = useState(editAlarm?.snoozeMinutes ?? 5)
+  const [maxSnoozes] = useState(editAlarm?.maxSnoozes ?? 3)
   const [loading, setLoading] = useState(false)
 
   const createAlarm = useAlarmStore((s) => s.createAlarm)
   const updateAlarm = useAlarmStore((s) => s.updateAlarm)
   const playlists = usePlaylistStore((s) => s.playlists)
-
-  useEffect(() => {
-    if (editAlarm) {
-      setName(editAlarm.name)
-      setHour(editAlarm.hour)
-      setMinute(editAlarm.minute)
-      setDays(editAlarm.days)
-      setPlaylistId(editAlarm.playlistId)
-      setSpecificTrackId(editAlarm.specificTrackId)
-      setVolume(editAlarm.volume)
-      setFadeIn(editAlarm.fadeIn)
-    } else {
-      setName('')
-      setHour(7)
-      setMinute(0)
-      setDays([1, 2, 3, 4, 5])
-      setPlaylistId(null)
-      setSpecificTrackId(null)
-      setVolume(70)
-      setFadeIn(true)
-    }
-  }, [editAlarm, open])
 
   const selectedPlaylist = playlists.find((p) => p.id === playlistId)
 
@@ -113,17 +91,18 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
   return (
     <Modal open={open} onClose={onClose} title={editAlarm ? 'Edit Alarm' : 'New Alarm'}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Input
-          label="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Wake Up"
-          autoFocus
-        />
+        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Wake Up" autoFocus />
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-slate-300">Time</label>
-          <TimePicker hour={hour} minute={minute} onChange={(h, m) => { setHour(h); setMinute(m) }} />
+          <TimePicker
+            hour={hour}
+            minute={minute}
+            onChange={(h, m) => {
+              setHour(h)
+              setMinute(m)
+            }}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -143,7 +122,9 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
           >
             <option value="">No playlist (system sound)</option>
             {playlists.map((p) => (
-              <option key={p.id} value={p.id}>{p.name} ({p.tracks.length} tracks)</option>
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.tracks.length} tracks)
+              </option>
             ))}
           </select>
         </div>
@@ -170,7 +151,9 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
               >
                 <option value="">Specific track...</option>
                 {selectedPlaylist.tracks.map((t) => (
-                  <option key={t.id} value={t.id}>{t.title} - {t.artist}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.title} - {t.artist}
+                  </option>
                 ))}
               </select>
             </div>
@@ -178,9 +161,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
         )}
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-slate-300">
-            Volume: {volume}%
-          </label>
+          <label className="text-sm font-medium text-slate-300">Volume: {volume}%</label>
           <input
             type="range"
             min={0}
@@ -197,7 +178,9 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={!name.trim() || loading}>
             {loading ? 'Saving...' : editAlarm ? 'Update' : 'Create'}
           </Button>

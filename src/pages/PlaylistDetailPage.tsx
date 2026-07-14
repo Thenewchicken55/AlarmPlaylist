@@ -174,13 +174,7 @@ export default function PlaylistDetailPage() {
                 <FileText size={16} />
                 Import .m3u
               </Button>
-              <input
-                ref={m3uInputRef}
-                type="file"
-                accept=".m3u,.pls"
-                className="hidden"
-                onChange={handleImportM3U}
-              />
+              <input ref={m3uInputRef} type="file" accept=".m3u,.pls" className="hidden" onChange={handleImportM3U} />
               <Button variant="ghost" size="sm" onClick={handleDelete}>
                 <Trash2 size={16} />
               </Button>

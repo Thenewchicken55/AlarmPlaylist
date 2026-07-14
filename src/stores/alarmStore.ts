@@ -92,9 +92,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     if (!alarm) return
     await db.alarms.update(id, { enabled: !alarm.enabled })
     set((s) => ({
-      alarms: s.alarms.map((a) =>
-        a.id === id ? { ...a, enabled: !a.enabled } : a
-      ),
+      alarms: s.alarms.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a)),
     }))
   },
 

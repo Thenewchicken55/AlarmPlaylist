@@ -31,10 +31,7 @@ export default function PlaybackControls({ size = 'default' }: PlaybackControlsP
         <Shuffle size={smIconSize} />
       </button>
 
-      <button
-        onClick={prev}
-        className="rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
-      >
+      <button onClick={prev} className="rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200">
         <SkipBack size={iconSize} />
       </button>
 
@@ -45,10 +42,7 @@ export default function PlaybackControls({ size = 'default' }: PlaybackControlsP
         {isPlaying ? <Pause size={iconSize} /> : <Play size={iconSize} style={{ marginLeft: 2 }} />}
       </button>
 
-      <button
-        onClick={next}
-        className="rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200"
-      >
+      <button onClick={next} className="rounded-lg p-2 text-slate-400 transition-colors hover:text-slate-200">
         <SkipForward size={iconSize} />
       </button>
 

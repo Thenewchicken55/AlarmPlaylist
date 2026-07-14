@@ -14,13 +14,20 @@ export function useKeyboardShortcuts() {
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       const target = e.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'SELECT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      )
+        return
 
       switch (e.key) {
         case ' ':
           e.preventDefault()
           if (!currentTrack) return
-          isPlaying ? pause() : resume()
+          if (isPlaying) pause()
+          else resume()
           break
         case 'ArrowRight':
           e.preventDefault()

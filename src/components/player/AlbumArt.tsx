@@ -21,7 +21,9 @@ export default function AlbumArt({ track, size = 'lg' }: AlbumArtProps) {
   }
 
   return (
-    <div className={`${dim} flex flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 shadow-lg`}>
+    <div
+      className={`${dim} flex flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 shadow-lg`}
+    >
       <Music size={isLg ? 48 : 20} className="text-indigo-400/60" />
     </div>
   )

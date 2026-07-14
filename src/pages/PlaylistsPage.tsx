@@ -64,7 +64,7 @@ export default function PlaylistsPage() {
         </div>
       )}
 
-      <CreatePlaylistModal open={showCreate} onClose={() => setShowCreate(false)} />
+      <CreatePlaylistModal key={String(showCreate)} open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   )
 }

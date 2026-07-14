@@ -11,14 +11,17 @@ export default function ProgressBar({ progress, duration }: ProgressBarProps) {
   const barRef = useRef<HTMLDivElement>(null)
   const seek = useAudioSeek()
 
-  const handleSeek = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const bar = barRef.current
-    if (!bar) return
-    const rect = bar.getBoundingClientRect()
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    seek(percent)
-  }, [seek])
+  const handleSeek = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      const bar = barRef.current
+      if (!bar) return
+      const rect = bar.getBoundingClientRect()
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+      seek(percent)
+    },
+    [seek],
+  )
 
   return (
     <div className="w-full">

@@ -15,7 +15,9 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
     } else {
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [open])
 
   useEffect(() => {
@@ -34,7 +36,10 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
       <div className="relative z-10 w-full max-w-lg rounded-t-2xl bg-slate-900 p-6 shadow-xl sm:rounded-2xl sm:mx-4 max-h-[90dvh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+          >
             <X size={20} />
           </button>
         </div>

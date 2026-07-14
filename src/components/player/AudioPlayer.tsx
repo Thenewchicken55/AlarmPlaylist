@@ -9,7 +9,7 @@ function inferFormat(url: string): string[] | undefined {
   const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase()
   if (!ext) return undefined
   const known = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac', 'opus', 'wma', 'webm'] as const
-  return known.includes(ext as typeof known[number]) ? [ext] : undefined
+  return known.includes(ext as (typeof known)[number]) ? [ext] : undefined
 }
 
 export default function AudioPlayer() {
@@ -66,6 +66,7 @@ export default function AudioPlayer() {
   useEffect(() => {
     // Reset URL immediately to force ReactHowler to destroy the old Howl
     // (prevents stale onLoadError callbacks from cascading through the queue)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUrl(undefined)
     setFormat(undefined)
     trackIdRef.current = currentTrack?.id
@@ -95,7 +96,9 @@ export default function AudioPlayer() {
     }
 
     resolveUrl()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [currentTrack?.id])
 
   // Progress tracking
@@ -117,13 +120,16 @@ export default function AudioPlayer() {
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [isPlaying, url, setProgress])
 
-  const seek = useCallback((percent: number) => {
-    const h = howlerRef.current?.howler
-    if (!h) return
-    const pos = (percent / 100) * h.duration()
-    h.seek(pos)
-    setProgress(percent)
-  }, [setProgress])
+  const seek = useCallback(
+    (percent: number) => {
+      const h = howlerRef.current?.howler
+      if (!h) return
+      const pos = (percent / 100) * h.duration()
+      h.seek(pos)
+      setProgress(percent)
+    },
+    [setProgress],
+  )
 
   if (!url) return null
 

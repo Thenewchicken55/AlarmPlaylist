@@ -29,8 +29,12 @@ export default function App() {
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
   const alarms = useAlarmStore((s) => s.alarms)
 
-  useEffect(() => { loadAlarms() }, [loadAlarms])
-  useEffect(() => { loadPlaylists() }, [loadPlaylists])
+  useEffect(() => {
+    loadAlarms()
+  }, [loadAlarms])
+  useEffect(() => {
+    loadPlaylists()
+  }, [loadPlaylists])
 
   useEffect(() => {
     function handleSWMessage(event: MessageEvent) {

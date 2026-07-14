@@ -39,7 +39,10 @@ export async function initYouTubeClient(clientId: string): Promise<void> {
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
     script.onload = () => {
-      if (!window.google?.accounts?.oauth2) { resolve(); return }
+      if (!window.google?.accounts?.oauth2) {
+        resolve()
+        return
+      }
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: SCOPES,

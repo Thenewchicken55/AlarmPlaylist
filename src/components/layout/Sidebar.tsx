@@ -19,9 +19,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive
-                  ? 'bg-indigo-600/20 text-indigo-400'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                isActive ? 'bg-indigo-600/20 text-indigo-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`
             }
           >

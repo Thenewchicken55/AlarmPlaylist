@@ -15,7 +15,13 @@ function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track 
   return tracks[Math.floor(Math.random() * tracks.length)]
 }
 
-function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<typeof useAlarmStore.getState>['alarms'][number]>; onClose: () => void }) {
+function AlarmAlertContent({
+  alarm,
+  onClose,
+}: {
+  alarm: NonNullable<ReturnType<typeof useAlarmStore.getState>['alarms'][number]>
+  onClose: () => void
+}) {
   const playlists = usePlaylistStore((s) => s.playlists)
   const [snoozeCount, setSnoozeCount] = useState(0)
   const loadedRef = useRef(false)
@@ -32,32 +38,46 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
     wasPlayingRef.current = usePlayerStore.getState().isPlaying
     usePlayerStore.getState().pause()
 
+    let cancelled = false
+
     async function playAlarm() {
       if (!track) return
       let url: string | undefined
       if (track.blobId) {
         url = await getAudioUrl(track.blobId)
+        if (cancelled) return
       } else {
         url = track.url
       }
-      if (!url) return
-
-      if (alarm.fadeIn) {
-        audioPlayer.load(url, {
-          onLoad: () => {
-            audioPlayer.setVolume(0)
-            audioPlayer.play()
-            audioPlayer.fade(0, alarm.volume, alarm.fadeInDuration * 1000)
-          },
+      if (!url) {
+        console.warn('AlarmPlaylist: track has no playable URL', {
+          title: track.title,
+          source: track.source,
+          sourceId: track.sourceId,
         })
-      } else {
-        audioPlayer.load(url, {
-          onLoad: () => {
+        return
+      }
+
+      audioPlayer.load(url, {
+        onLoad: () => {
+          if (cancelled) return
+          if (alarm.fadeIn) {
+            const startVolume = Math.min(10, alarm.volume)
+            audioPlayer.setVolume(startVolume)
+            audioPlayer.play()
+            audioPlayer.fade(startVolume, alarm.volume, alarm.fadeInDuration * 1000)
+          } else {
             audioPlayer.setVolume(alarm.volume)
             audioPlayer.play()
-          },
-        })
-      }
+          }
+        },
+        onLoadError: (err) => {
+          console.error('AlarmPlaylist: failed to load audio', alarm.name, track.title, err)
+        },
+        onPlayError: (err) => {
+          console.error('AlarmPlaylist: failed to play audio', alarm.name, track.title, err)
+        },
+      })
     }
 
     playAlarm()
@@ -71,8 +91,10 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
     }
 
     return () => {
+      cancelled = true
       audioPlayer.stop()
       audioPlayer.unload()
+      loadedRef.current = false
     }
   }, [])
 
@@ -95,9 +117,12 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
     wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
 
-    snoozeTimerRef.current = setTimeout(() => {
-      useAlarmStore.getState().setActiveAlarm(alarm.id)
-    }, alarm.snoozeMinutes * 60 * 1000)
+    snoozeTimerRef.current = setTimeout(
+      () => {
+        useAlarmStore.getState().setActiveAlarm(alarm.id)
+      },
+      alarm.snoozeMinutes * 60 * 1000,
+    )
 
     onClose()
   }
@@ -118,9 +143,15 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
             <div className="flex items-center gap-3 rounded-full bg-white/10 px-6 py-3 backdrop-blur">
               <div className="flex gap-0.5">
                 <span className="h-4 w-1 animate-pulse rounded-full bg-indigo-400" />
-                <span className="h-6 w-1 animate-pulse rounded-full bg-indigo-400" style={{ animationDelay: '0.15s' }} />
+                <span
+                  className="h-6 w-1 animate-pulse rounded-full bg-indigo-400"
+                  style={{ animationDelay: '0.15s' }}
+                />
                 <span className="h-3 w-1 animate-pulse rounded-full bg-indigo-400" style={{ animationDelay: '0.3s' }} />
-                <span className="h-5 w-1 animate-pulse rounded-full bg-indigo-400" style={{ animationDelay: '0.45s' }} />
+                <span
+                  className="h-5 w-1 animate-pulse rounded-full bg-indigo-400"
+                  style={{ animationDelay: '0.45s' }}
+                />
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-white">{track.title}</p>
@@ -137,9 +168,11 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
             className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900 px-8 py-4 text-lg font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <AlarmClock size={24} />
-            Snooze {(alarm.snoozeMinutes)}m
+            Snooze {alarm.snoozeMinutes}m
             {alarm.maxSnoozes > 0 && (
-              <span className="text-sm text-slate-500">({snoozeCount}/{alarm.maxSnoozes})</span>
+              <span className="text-sm text-slate-500">
+                ({snoozeCount}/{alarm.maxSnoozes})
+              </span>
             )}
           </button>
 
@@ -152,9 +185,7 @@ function AlarmAlertContent({ alarm, onClose }: { alarm: NonNullable<ReturnType<t
           </button>
         </div>
 
-        {snoozeLimit && (
-          <p className="text-sm text-slate-500">Snooze limit reached</p>
-        )}
+        {snoozeLimit && <p className="text-sm text-slate-500">Snooze limit reached</p>}
       </div>
     </div>
   )
@@ -169,7 +200,5 @@ export default function AlarmAlertOverlay() {
 
   if (!activeAlarmId || !alarm) return null
 
-  return (
-    <AlarmAlertContent alarm={alarm} onClose={() => setActiveAlarm(null)} />
-  )
+  return <AlarmAlertContent alarm={alarm} onClose={() => setActiveAlarm(null)} />
 }

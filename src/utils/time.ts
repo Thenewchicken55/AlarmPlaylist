@@ -30,7 +30,7 @@ export function dayNameLong(day: number): string {
 
 export function daysLabel(days: number[]): string {
   if (days.length === 7) return 'Every day'
-  if (days.length === 5 && days.every(d => d >= 1 && d <= 5)) return 'Weekdays'
+  if (days.length === 5 && days.every((d) => d >= 1 && d <= 5)) return 'Weekdays'
   if (days.length === 2 && days.includes(0) && days.includes(6)) return 'Weekends'
   return days.map(dayName).join(', ')
 }

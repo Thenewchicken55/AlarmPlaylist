@@ -25,7 +25,11 @@ export default function MiniPlayer() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); isPlaying ? pause() : resume() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isPlaying) pause()
+              else resume()
+            }}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500"
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} style={{ marginLeft: 1 }} />}

@@ -30,10 +30,7 @@ export default function PlayerPage() {
         <TrackInfo track={currentTrack} />
 
         <div className="w-full max-w-sm">
-          <ProgressBar
-            progress={progress}
-            duration={duration}
-          />
+          <ProgressBar progress={progress} duration={duration} />
         </div>
 
         <PlaybackControls size="large" />

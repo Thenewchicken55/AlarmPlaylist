@@ -26,6 +26,7 @@ export default function SettingsPage() {
   useInstallPrompt()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNotifPermission('Notification' in window ? Notification.permission : 'denied')
     getStorageInfo().then(setStorageInfo)
 
@@ -66,9 +67,13 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-slate-800 p-2">
-                {theme === 'dark' ? <Moon size={18} className="text-indigo-400" /> :
-                 theme === 'light' ? <Sun size={18} className="text-amber-400" /> :
-                 <Monitor size={18} className="text-slate-400" />}
+                {theme === 'dark' ? (
+                  <Moon size={18} className="text-indigo-400" />
+                ) : theme === 'light' ? (
+                  <Sun size={18} className="text-amber-400" />
+                ) : (
+                  <Monitor size={18} className="text-slate-400" />
+                )}
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-200">Theme</p>
@@ -103,8 +108,11 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium text-slate-200">Notifications</p>
                 <p className="text-xs text-slate-500">
-                  {notifPermission === 'granted' ? 'Enabled' :
-                   notifPermission === 'denied' ? 'Blocked' : 'Not configured'}
+                  {notifPermission === 'granted'
+                    ? 'Enabled'
+                    : notifPermission === 'denied'
+                      ? 'Blocked'
+                      : 'Not configured'}
                 </p>
               </div>
             </div>
@@ -128,7 +136,9 @@ export default function SettingsPage() {
                   <p className="text-xs text-slate-500">Add to your home screen</p>
                 </div>
               </div>
-              <Button size="sm" onClick={handleInstall}>Install</Button>
+              <Button size="sm" onClick={handleInstall}>
+                Install
+              </Button>
             </div>
           </Card>
         )}
@@ -155,9 +165,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium text-slate-200">About</p>
               <p className="text-xs text-slate-500">AlarmPlaylist v0.1.0</p>
-              <p className="mt-1 text-xs text-slate-600">
-                Wake up to your favorite music. Cross-platform PWA.
-              </p>
+              <p className="mt-1 text-xs text-slate-600">Wake up to your favorite music. Cross-platform PWA.</p>
             </div>
           </div>
         </Card>

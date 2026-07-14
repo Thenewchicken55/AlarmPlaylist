@@ -10,9 +10,17 @@ describe('alarmStore', () => {
 
   it('creates an alarm', async () => {
     await useAlarmStore.getState().createAlarm({
-      name: 'Work', hour: 8, minute: 0, days: [1, 2, 3, 4, 5],
-      playlistId: 'pl1', specificTrackId: null, volume: 80, fadeIn: true,
-      fadeInDuration: 10, snoozeMinutes: 5, maxSnoozes: 3,
+      name: 'Work',
+      hour: 8,
+      minute: 0,
+      days: [1, 2, 3, 4, 5],
+      playlistId: 'pl1',
+      specificTrackId: null,
+      volume: 80,
+      fadeIn: true,
+      fadeInDuration: 10,
+      snoozeMinutes: 5,
+      maxSnoozes: 3,
     })
     expect(useAlarmStore.getState().alarms).toHaveLength(1)
     expect(useAlarmStore.getState().alarms[0].name).toBe('Work')
@@ -20,9 +28,17 @@ describe('alarmStore', () => {
 
   it('updates an alarm', async () => {
     await useAlarmStore.getState().createAlarm({
-      name: 'Test', hour: 8, minute: 0, days: [], playlistId: 'pl1',
-      specificTrackId: null, volume: 50, fadeIn: false, fadeInDuration: 5,
-      snoozeMinutes: 5, maxSnoozes: 0,
+      name: 'Test',
+      hour: 8,
+      minute: 0,
+      days: [],
+      playlistId: 'pl1',
+      specificTrackId: null,
+      volume: 50,
+      fadeIn: false,
+      fadeInDuration: 5,
+      snoozeMinutes: 5,
+      maxSnoozes: 0,
     })
     const id = useAlarmStore.getState().alarms[0].id
     await useAlarmStore.getState().updateAlarm(id, { name: 'Updated' })
@@ -31,9 +47,17 @@ describe('alarmStore', () => {
 
   it('deletes an alarm', async () => {
     await useAlarmStore.getState().createAlarm({
-      name: 'Test', hour: 8, minute: 0, days: [], playlistId: 'pl1',
-      specificTrackId: null, volume: 50, fadeIn: false, fadeInDuration: 5,
-      snoozeMinutes: 5, maxSnoozes: 0,
+      name: 'Test',
+      hour: 8,
+      minute: 0,
+      days: [],
+      playlistId: 'pl1',
+      specificTrackId: null,
+      volume: 50,
+      fadeIn: false,
+      fadeInDuration: 5,
+      snoozeMinutes: 5,
+      maxSnoozes: 0,
     })
     const id = useAlarmStore.getState().alarms[0].id
     await useAlarmStore.getState().deleteAlarm(id)
@@ -42,9 +66,17 @@ describe('alarmStore', () => {
 
   it('toggles enabled', async () => {
     await useAlarmStore.getState().createAlarm({
-      name: 'Test', hour: 8, minute: 0, days: [], playlistId: 'pl1',
-      specificTrackId: null, volume: 50, fadeIn: false, fadeInDuration: 5,
-      snoozeMinutes: 5, maxSnoozes: 0,
+      name: 'Test',
+      hour: 8,
+      minute: 0,
+      days: [],
+      playlistId: 'pl1',
+      specificTrackId: null,
+      volume: 50,
+      fadeIn: false,
+      fadeInDuration: 5,
+      snoozeMinutes: 5,
+      maxSnoozes: 0,
     })
     const id = useAlarmStore.getState().alarms[0].id
     await useAlarmStore.getState().toggleAlarm(id)

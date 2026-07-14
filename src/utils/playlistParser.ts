@@ -35,7 +35,13 @@ export function parseM3U(content: string, basePath: string): Track[] {
     }
     if (trimmed && !trimmed.startsWith('#')) {
       const path = trimmed.startsWith('http') ? trimmed : resolvePath(basePath, trimmed)
-      const name = trimmed.split('/').pop()?.split('\\').pop()?.replace(/\.[^/.]+$/, '') ?? 'Unknown'
+      const name =
+        trimmed
+          .split('/')
+          .pop()
+          ?.split('\\')
+          .pop()
+          ?.replace(/\.[^/.]+$/, '') ?? 'Unknown'
       tracks.push({
         id: generateId(),
         title: extinf?.title ?? name,
@@ -67,7 +73,13 @@ export function parsePLS(content: string, basePath: string): Track[] {
       currentEntry = parseInt(fileMatch[1]) - 1
       const path = fileMatch[2].trim()
       const url = path.startsWith('http') ? path : resolvePath(basePath, path)
-      const name = path.split('/').pop()?.split('\\').pop()?.replace(/\.[^/.]+$/, '') ?? 'Unknown'
+      const name =
+        path
+          .split('/')
+          .pop()
+          ?.split('\\')
+          .pop()
+          ?.replace(/\.[^/.]+$/, '') ?? 'Unknown'
       tracks.push({
         id: generateId(),
         title: name,

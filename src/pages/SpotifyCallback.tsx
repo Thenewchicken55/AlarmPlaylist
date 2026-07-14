@@ -18,6 +18,7 @@ export default function SpotifyCallback() {
     const error = params.get('error')
 
     if (error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('Authentication cancelled')
       toast.info('Spotify authentication cancelled')
       setTimeout(() => navigate('/playlists'), 2000)

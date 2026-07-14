@@ -24,7 +24,9 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
         className="w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-3 text-center text-2xl font-bold text-slate-100 outline-none focus:border-indigo-500"
       >
         {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
-          <option key={h} value={h}>{h.toString().padStart(2, '0')}</option>
+          <option key={h} value={h}>
+            {h.toString().padStart(2, '0')}
+          </option>
         ))}
       </select>
       <span className="text-2xl font-bold text-slate-400">:</span>
@@ -34,7 +36,9 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
         className="w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-3 text-center text-2xl font-bold text-slate-100 outline-none focus:border-indigo-500"
       >
         {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-          <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
+          <option key={m} value={m}>
+            {m.toString().padStart(2, '0')}
+          </option>
         ))}
       </select>
       <div className="ml-1 flex flex-col gap-1">

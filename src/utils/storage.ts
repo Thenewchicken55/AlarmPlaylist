@@ -1,6 +1,11 @@
 const STORAGE_WARN_THRESHOLD = 0.8
 
-export async function checkStorageQuota(): Promise<{ ok: boolean; used: number; quota: number; percent: number } | null> {
+export async function checkStorageQuota(): Promise<{
+  ok: boolean
+  used: number
+  quota: number
+  percent: number
+} | null> {
   if (!navigator.storage || !navigator.storage.estimate) return null
   try {
     const estimate = await navigator.storage.estimate()
@@ -12,7 +17,6 @@ export async function checkStorageQuota(): Promise<{ ok: boolean; used: number; 
     return null
   }
 }
-
 
 export function isPrivateBrowsing(): boolean {
   try {

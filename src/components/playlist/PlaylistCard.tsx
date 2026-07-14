@@ -31,7 +31,9 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
         onClick={onClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick() }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') onClick()
+        }}
         className="w-full cursor-pointer rounded-xl border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-slate-700 hover:bg-slate-800/50"
       >
         <div className="flex items-start gap-4">
@@ -56,7 +58,10 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
             )}
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen) }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setMenuOpen(!menuOpen)
+            }}
             className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-slate-300"
           >
             <MoreVertical size={16} />
@@ -77,7 +82,10 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
               Export M3U
             </button>
             <button
-              onClick={() => { setMenuOpen(false); onDelete() }}
+              onClick={() => {
+                setMenuOpen(false)
+                onDelete()
+              }}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-slate-800"
             >
               <Trash2 size={14} />
