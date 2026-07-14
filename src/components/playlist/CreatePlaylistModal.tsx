@@ -11,16 +11,7 @@ import {
   fetchYouTubePlaylists,
   fetchYouTubePlaylistTracks,
 } from '../../services/youtube'
-import {
-  isSpotifyConnected,
-  authenticateSpotify,
-  fetchSpotifyPlaylists,
-  fetchSpotifyPlaylistTracks,
-} from '../../services/spotify'
 import type { PlaylistSource, Playlist as PlaylistType } from '../../types'
-
-const spotifyRedirectUri =
-  import.meta.env.VITE_SPOTIFY_REDIRECT_URI ?? `${window.location.origin}${import.meta.env.BASE_URL}spotify-callback`
 
 interface CreatePlaylistModalProps {
   open: boolean
@@ -45,7 +36,6 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
   const [color, setColor] = useState(colors[0])
   const [loading, setLoading] = useState(false)
   const [youtubeConnected, setYoutubeConnected] = useState(isYouTubeConnected())
-  const [spotifyConnected] = useState(isSpotifyConnected())
   const [remotePlaylists, setRemotePlaylists] = useState<PlaylistType[]>([])
   const [selectedRemoteId, setSelectedRemoteId] = useState<string | null>(null)
 
@@ -70,21 +60,10 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
     }
   }
 
-  function handleSpotifyConnect() {
-    const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID
-    if (!clientId) {
-      toast.error('Spotify Client ID not configured. Set VITE_SPOTIFY_CLIENT_ID in .env')
-      return
-    }
-    authenticateSpotify(clientId, spotifyRedirectUri)
-  }
-
   async function handleFetchRemote() {
     setLoading(true)
     try {
-      let playlists: PlaylistType[] = []
-      if (source === 'youtube') playlists = await fetchYouTubePlaylists()
-      else if (source === 'spotify') playlists = await fetchSpotifyPlaylists()
+      const playlists = await fetchYouTubePlaylists()
       setRemotePlaylists(playlists)
       if (playlists.length === 0) toast.info('No playlists found')
     } catch {
@@ -95,25 +74,19 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
   }
 
   async function handleImportRemote() {
-    if (!selectedRemoteId || source === 'local') return
+    if (!selectedRemoteId) return
     setLoading(true)
     try {
       const remotePlaylist = remotePlaylists.find((p) => p.id === selectedRemoteId)
       if (!remotePlaylist) return
 
-      const tracks =
-        source === 'youtube'
-          ? await fetchYouTubePlaylistTracks(selectedRemoteId)
-          : await fetchSpotifyPlaylistTracks(selectedRemoteId)
+      const tracks = await fetchYouTubePlaylistTracks(selectedRemoteId)
 
       const playlist = await createPlaylist({
         name: remotePlaylist.name,
         source,
         color,
-        sourceUrl:
-          source === 'spotify'
-            ? `https://open.spotify.com/playlist/${selectedRemoteId}`
-            : `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
+        sourceUrl: `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
       })
 
       for (const track of tracks) {
@@ -154,7 +127,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-slate-300">Source</label>
           <div className="flex gap-2">
-            {(['local', 'youtube', 'spotify'] as const).map((s) => (
+            {(['local', 'youtube'] as const).map((s) => (
               <button
                 key={s}
                 type="button"
@@ -210,23 +183,16 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
         {showRemoteConfig && (
           <div className="space-y-4">
             <p className="text-sm text-slate-400">
-              {source === 'youtube'
-                ? 'Import a YouTube playlist. Note: playback will use YouTube thumbnails as references.'
-                : 'Import a Spotify playlist. Note: only 30-second preview clips are available for playback.'}
+              Import a YouTube playlist. Note: playback will use YouTube thumbnails as references.
             </p>
 
-            {source === 'youtube' && !youtubeConnected && (
+            {!youtubeConnected && (
               <Button onClick={handleYouTubeConnect} className="w-full">
                 Connect YouTube
               </Button>
             )}
-            {source === 'spotify' && !spotifyConnected && (
-              <Button onClick={handleSpotifyConnect} className="w-full">
-                Connect Spotify
-              </Button>
-            )}
 
-            {(source === 'youtube' && youtubeConnected) || (source === 'spotify' && spotifyConnected) ? (
+            {youtubeConnected && (
               <>
                 {remotePlaylists.length === 0 ? (
                   <Button onClick={handleFetchRemote} loading={loading} className="w-full">
@@ -250,7 +216,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
                   </div>
                 )}
               </>
-            ) : null}
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="secondary" onClick={onClose}>

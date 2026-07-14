@@ -1,4 +1,4 @@
-export type PlaylistSource = 'local' | 'youtube' | 'spotify'
+export type PlaylistSource = 'local' | 'youtube'
 
 export interface Track {
   id: string
