@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactHowler from 'react-howler'
 import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
+import { youtubePlayer } from '../../services/youtubePlayer'
 import AudioPlayerContext from './AudioPlayerContext'
 import { toast } from 'sonner'
 
@@ -24,17 +25,16 @@ export default function AudioPlayer() {
   const [format, setFormat] = useState<string[] | undefined>()
   const howlerRef = useRef<ReactHowler | null>(null)
   const animFrameRef = useRef<number>(0)
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
-  // Track ID ref for guarding stale callbacks
   const trackIdRef = useRef(currentTrack?.id)
-
-  // Track consecutive skip count to stop runaway cascades
   const skipCountRef = useRef(0)
   const lastSkipTimeRef = useRef(0)
 
+  const isYouTube = currentTrack?.source === 'youtube'
+
   function skipWithWarning(trackTitle: string, reason: string) {
     const now = Date.now()
-    // Reset skip counter if it's been more than 2 seconds since the last skip
     if (now - lastSkipTimeRef.current > 2000) {
       skipCountRef.current = 0
     }
@@ -43,14 +43,12 @@ export default function AudioPlayer() {
 
     console.warn(`Skipping "${trackTitle}": ${reason}`)
 
-    // Show a toast for the first few skips, then a summary
     if (skipCountRef.current <= 3) {
       toast.warning(`Skipped "${trackTitle}" — ${reason}`)
     } else if (skipCountRef.current === 4) {
       toast.warning('Skipping more tracks with missing audio data...')
     }
 
-    // Stop the cascade if we've skipped too many in a row
     const { queue } = usePlayerStore.getState()
     if (skipCountRef.current >= queue.length) {
       toast.error('No playable tracks found — audio files may need to be re-imported')
@@ -58,14 +56,11 @@ export default function AudioPlayer() {
       return
     }
 
-    // Small delay to prevent synchronous cascade that makes the UI unresponsive
     setTimeout(() => next(), 50)
   }
 
-  // Resolve URL when track changes
+  // Track-change effect
   useEffect(() => {
-    // Reset URL immediately to force ReactHowler to destroy the old Howl
-    // (prevents stale onLoadError callbacks from cascading through the queue)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUrl(undefined)
     setFormat(undefined)
@@ -76,61 +71,124 @@ export default function AudioPlayer() {
     const track = currentTrack
     let cancelled = false
 
-    async function resolveUrl() {
-      let resolvedUrl: string | undefined
-      if (track.blobId) {
-        resolvedUrl = await getAudioUrl(track.blobId)
-      } else {
-        resolvedUrl = track.url
-      }
-      if (cancelled) return
-      if (!resolvedUrl) {
-        skipWithWarning(track.title, 'audio data missing (try re-importing)')
-        return
+    if (track.source === 'youtube' && track.sourceId) {
+      youtubePlayer.load(track.sourceId, {
+        onLoad: () => {
+          if (cancelled || trackIdRef.current !== track.id) return
+          skipCountRef.current = 0
+          const dur = youtubePlayer.duration()
+          if (dur > 0) setDuration(dur)
+
+          if (usePlayerStore.getState().isPlaying) {
+            youtubePlayer.play()
+          }
+        },
+        onEnd: () => {
+          if (cancelled) return
+          skipCountRef.current = 0
+          next()
+        },
+        onLoadError: (err) => {
+          console.error('YouTube load error:', track.title, err)
+          if (cancelled || trackIdRef.current !== track.id) return
+          skipWithWarning(track.title, 'YouTube: failed to load')
+        },
+        onPlayError: (err) => {
+          console.error('YouTube play error:', track.title, err)
+        },
+      })
+    } else {
+      async function resolveUrl() {
+        let resolvedUrl: string | undefined
+        if (track.blobId) {
+          resolvedUrl = await getAudioUrl(track.blobId)
+        } else {
+          resolvedUrl = track.url
+        }
+        if (cancelled) return
+        if (!resolvedUrl) {
+          skipWithWarning(track.title, 'audio data missing (try re-importing)')
+          return
+        }
+
+        skipCountRef.current = 0
+        setUrl(resolvedUrl)
+        setFormat(inferFormat(resolvedUrl))
       }
 
-      // Reset skip counter on successful URL resolution
-      skipCountRef.current = 0
-      setUrl(resolvedUrl)
-      setFormat(inferFormat(resolvedUrl))
+      resolveUrl()
     }
 
-    resolveUrl()
     return () => {
       cancelled = true
+      if (track.source === 'youtube') {
+        youtubePlayer.stop()
+      }
     }
   }, [currentTrack?.id])
 
   // Progress tracking
   useEffect(() => {
+    if (isYouTube && isPlaying) {
+      progressIntervalRef.current = setInterval(() => {
+        setProgress(youtubePlayer.progress())
+        const dur = youtubePlayer.duration()
+        if (dur > 0) setDuration(dur)
+      }, 250)
+      return () => clearInterval(progressIntervalRef.current)
+    }
+
     function updateProgress() {
       const h = howlerRef.current?.howler
       if (!h) return
       const seek = h.seek() as number
       const dur = h.duration()
-      const prog = dur > 0 ? (seek / dur) * 100 : 0
-      setProgress(prog)
+      setProgress(dur > 0 ? (seek / dur) * 100 : 0)
       animFrameRef.current = requestAnimationFrame(updateProgress)
     }
 
-    if (isPlaying && url) {
+    if (!isYouTube && isPlaying && url) {
       animFrameRef.current = requestAnimationFrame(updateProgress)
     }
 
     return () => cancelAnimationFrame(animFrameRef.current)
-  }, [isPlaying, url, setProgress])
+  }, [isPlaying, url, isYouTube, setProgress])
+
+  // Volume sync for YouTube
+  useEffect(() => {
+    if (isYouTube) {
+      youtubePlayer.setVolume(volume)
+    }
+  }, [volume, isYouTube])
+
+  // Play/pause sync for YouTube
+  useEffect(() => {
+    if (!isYouTube) return
+    if (isPlaying) {
+      youtubePlayer.play()
+    } else {
+      youtubePlayer.pause()
+    }
+  }, [isPlaying, isYouTube])
 
   const seek = useCallback(
     (percent: number) => {
+      if (isYouTube) {
+        youtubePlayer.seek(percent)
+        setProgress(percent)
+        return
+      }
+
       const h = howlerRef.current?.howler
       if (!h) return
       const pos = (percent / 100) * h.duration()
       h.seek(pos)
       setProgress(percent)
     },
-    [setProgress],
+    [setProgress, isYouTube],
   )
 
+  if (isYouTube) return null
   if (!url) return null
 
   return (
@@ -143,13 +201,11 @@ export default function AudioPlayer() {
         volume={volume / 100}
         html5
         onLoad={() => {
-          // Successful load — reset skip counter
           skipCountRef.current = 0
           const dur = howlerRef.current?.howler?.duration() ?? 0
           setDuration(dur)
         }}
         onEnd={() => {
-          // Normal track end — reset skip counter
           skipCountRef.current = 0
           next()
         }}
