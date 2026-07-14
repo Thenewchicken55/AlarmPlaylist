@@ -27,7 +27,7 @@ interface PlaylistState {
   removeTrack: (playlistId: string, trackId: string) => Promise<void>
   reorderTracks: (playlistId: string, fromIndex: number, toIndex: number) => Promise<void>
 
-  importLocalFiles: (playlistId: string, files: FileList) => Promise<void>
+  importLocalFiles: (playlistId: string, files: FileList | File[]) => Promise<void>
 }
 
 function generateId(): string {

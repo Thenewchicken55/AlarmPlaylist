@@ -63,7 +63,9 @@ export default function PlaylistDetailPage() {
 
   async function handleImportFolder() {
     try {
-      const handle = await (window as any).showDirectoryPicker()
+      const handle = await (
+        window as unknown as { showDirectoryPicker: () => Promise<FileSystemDirectoryHandle> }
+      ).showDirectoryPicker()
       const entries: File[] = []
       const audioExts = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.opus', '.wma'])
       for await (const entry of handle.values()) {
@@ -76,10 +78,10 @@ export default function PlaylistDetailPage() {
         toast.info('No audio files found in folder')
         return
       }
-      await importLocalFiles(playlist.id, entries as any)
+      await importLocalFiles(playlist.id, entries)
       toast.success(`Imported ${entries.length} files from folder`)
-    } catch (err: any) {
-      if (err.name !== 'AbortError' && err.name !== 'SecurityError') {
+    } catch (err) {
+      if (err instanceof DOMException && err.name !== 'AbortError' && err.name !== 'SecurityError') {
         toast.error('Failed to import folder')
       }
     }

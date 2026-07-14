@@ -33,6 +33,7 @@ const colors = [
 
 export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistModalProps) {
   const [source, setSource] = useState<PlaylistSource>('local')
+  const [name, setName] = useState('')
   const [color, setColor] = useState(colors[0])
   const [loading, setLoading] = useState(false)
   const [youtubeConnected, setYoutubeConnected] = useState(isYouTubeConnected())
@@ -84,7 +85,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
       const playlist = await createPlaylist({
         name: remotePlaylist.name,
-        source,
+        source: 'youtube',
         color,
         sourceUrl: `https://www.youtube.com/playlist?list=${selectedRemoteId}`,
       })
@@ -108,8 +109,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
     setLoading(true)
     try {
-      const nameInput = (e.target as HTMLFormElement).elements.namedItem('name') as HTMLInputElement
-      await createPlaylist({ name: nameInput.value.trim(), source, color })
+      await createPlaylist({ name: name.trim(), source, color })
       toast.success('Playlist created')
       onClose()
     } catch {
@@ -150,7 +150,13 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
         {!showRemoteConfig && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input label="Name" name="name" placeholder="My Playlist" autoFocus />
+            <Input
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="My Playlist"
+              autoFocus
+            />
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-slate-300">Color</label>

@@ -9,6 +9,11 @@ import { formatFileSize } from '../utils/format'
 import { checkStorageQuota, isPrivateBrowsing } from '../utils/storage'
 import { toast } from 'sonner'
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 const themeOptions = [
   { value: 'system' as const, label: 'System', icon: Monitor },
   { value: 'light' as const, label: 'Light', icon: Sun },
@@ -49,7 +54,7 @@ export default function SettingsPage() {
 
   async function handleInstall() {
     if (installPromptEvent) {
-      const e = installPromptEvent as any
+      const e = installPromptEvent as BeforeInstallPromptEvent
       e.prompt()
       const result = await e.userChoice
       if (result.outcome === 'accepted') {
