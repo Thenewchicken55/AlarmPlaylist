@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlarmClock, X } from 'lucide-react'
 import { audioPlayer } from '../../services/player'
+import { youtubePlayer } from '../../services/youtubePlayer'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { usePlayerStore } from '../../stores/playerStore'
@@ -42,6 +43,56 @@ function AlarmAlertContent({
 
     async function playAlarm() {
       if (!track) return
+
+      // YouTube path
+      if (track.source === 'youtube' && track.sourceId) {
+        try {
+          // Must happen inside a user gesture (before alarm can fire, the user
+          // has interacted with the page). The mute trick handles strict browsers.
+          youtubePlayer.mute()
+          await youtubePlayer.load(track.sourceId, {
+            onLoad: () => {
+              if (cancelled) return
+
+              youtubePlayer.play()
+
+              // Watch for actual playback start, then apply alarm volume
+              const check = setInterval(() => {
+                if (!youtubePlayer.isPlaying()) return
+                clearInterval(check)
+
+                youtubePlayer.unmute()
+
+                if (alarm.fadeIn) {
+                  const startVolume = Math.min(10, alarm.volume)
+                  youtubePlayer.setVolume(startVolume)
+                  youtubePlayer.fade(startVolume, alarm.volume, alarm.fadeInDuration * 1000)
+                } else {
+                  youtubePlayer.setVolume(alarm.volume)
+                }
+              }, 100)
+
+              setTimeout(() => {
+                clearInterval(check)
+                if (!youtubePlayer.isPlaying()) {
+                  console.warn('AlarmPlaylist: YouTube autoplay blocked')
+                }
+              }, 3000)
+            },
+            onLoadError: (err) => {
+              console.error('AlarmPlaylist: YouTube load error', alarm.name, track.title, err)
+            },
+            onPlayError: (err) => {
+              console.error('AlarmPlaylist: YouTube play error', alarm.name, track.title, err)
+            },
+          })
+        } catch (err) {
+          console.error('AlarmPlaylist: YouTube player error', err)
+        }
+        return
+      }
+
+      // Local path
       let url: string | undefined
       if (track.blobId) {
         url = await getAudioUrl(track.blobId)
@@ -94,14 +145,23 @@ function AlarmAlertContent({
       cancelled = true
       audioPlayer.stop()
       audioPlayer.unload()
+      if (track?.source === 'youtube') {
+        youtubePlayer.stop()
+        youtubePlayer.unload()
+      }
       loadedRef.current = false
     }
   }, [])
 
   function handleDismiss() {
     clearTimeout(snoozeTimerRef.current)
-    audioPlayer.stop()
-    audioPlayer.unload()
+    if (track?.source === 'youtube') {
+      youtubePlayer.stop()
+      youtubePlayer.unload()
+    } else {
+      audioPlayer.stop()
+      audioPlayer.unload()
+    }
     loadedRef.current = false
     if (wasPlayingRef.current) usePlayerStore.getState().resume()
     onClose()
@@ -111,8 +171,13 @@ function AlarmAlertContent({
   function handleSnooze() {
     if (snoozeCount >= alarm.maxSnoozes && alarm.maxSnoozes > 0) return
     clearTimeout(snoozeTimerRef.current)
-    audioPlayer.stop()
-    audioPlayer.unload()
+    if (track?.source === 'youtube') {
+      youtubePlayer.stop()
+      youtubePlayer.unload()
+    } else {
+      audioPlayer.stop()
+      audioPlayer.unload()
+    }
     loadedRef.current = false
     wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
