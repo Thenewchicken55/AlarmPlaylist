@@ -8,6 +8,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useCrossTabSync } from './hooks/useCrossTabSync'
 import { useDSTRecalc } from './hooks/useDSTRecalc'
 import { useAlarmScheduler } from './hooks/useAlarmScheduler'
+import { useServiceWorkerAlarmSync } from './hooks/useServiceWorkerAlarmSync'
 import { useAlarmStore } from './stores/alarmStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { alarmScheduler } from './services/alarmScheduler'
@@ -24,6 +25,7 @@ export default function App() {
   useCrossTabSync()
   useDSTRecalc()
   useAlarmScheduler()
+  useServiceWorkerAlarmSync()
 
   const loadAlarms = useAlarmStore((s) => s.loadAlarms)
   const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists)
@@ -39,6 +41,7 @@ export default function App() {
   useEffect(() => {
     function handleSWMessage(event: MessageEvent) {
       if (event.data?.type === 'PERIODIC_ALARM_CHECK') {
+        alarmScheduler.checkMissedAlarms(alarms)
         alarmScheduler.rescheduleAll(alarms)
       }
     }

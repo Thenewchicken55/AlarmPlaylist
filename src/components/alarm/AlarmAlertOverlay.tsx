@@ -6,6 +6,7 @@ import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
+import { playFallbackAlarm, stopFallbackAlarm } from '../../utils/fallbackAlarm'
 import type { Track } from '../../types'
 
 function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track | null {
@@ -25,12 +26,43 @@ function AlarmAlertContent({
 }) {
   const playlists = usePlaylistStore((s) => s.playlists)
   const [snoozeCount, setSnoozeCount] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
   const loadedRef = useRef(false)
   const wasPlayingRef = useRef(false)
   const snoozeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const playlist = playlists.find((p) => p.id === alarm.playlistId)
   const track = playlist ? getRandomTrack(playlist.tracks, alarm.specificTrackId) : null
+
+  // Keep the displayed clock ticking while the overlay is open (frozen before).
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Keep the screen awake while the alarm overlay is up so the OS doesn't
+  // dim/sleep and suspend audio. Re-acquire on visibility regain (wake lock
+  // is released when the tab is hidden).
+  useEffect(() => {
+    let wakeLock: WakeLockSentinel | null = null
+    const request = async () => {
+      try {
+        wakeLock = await navigator.wakeLock?.request('screen')
+      } catch {
+        /* autoplay policy / unsupported — ignore */
+      }
+    }
+    request()
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && !wakeLock) request()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      document.removeEventListener('visibilitychange', onVis)
+      wakeLock?.release().catch(() => {})
+      wakeLock = null
+    }
+  }, [])
 
   useEffect(() => {
     if (!track || loadedRef.current) return
@@ -75,20 +107,24 @@ function AlarmAlertContent({
               // Safety log — don't clear the interval; let it keep polling so
               // slow-starting videos (buffering >3s) still get unmute + volume/fade
               setTimeout(() => {
-                if (!youtubePlayer.isPlaying()) {
+                if (!cancelled && !youtubePlayer.isPlaying()) {
                   console.warn('AlarmPlaylist: YouTube playback not started after 30s')
+                  playFallbackAlarm()
                 }
               }, 30000)
             },
             onLoadError: (err) => {
               console.error('AlarmPlaylist: YouTube load error', alarm.name, track.title, err)
+              if (!cancelled) playFallbackAlarm()
             },
             onPlayError: (err) => {
               console.error('AlarmPlaylist: YouTube play error', alarm.name, track.title, err)
+              if (!cancelled) playFallbackAlarm()
             },
           })
         } catch (err) {
           console.error('AlarmPlaylist: YouTube player error', err)
+          if (!cancelled) playFallbackAlarm()
         }
         return
       }
@@ -107,6 +143,7 @@ function AlarmAlertContent({
           source: track.source,
           sourceId: track.sourceId,
         })
+        if (!cancelled) playFallbackAlarm()
         return
       }
 
@@ -125,9 +162,11 @@ function AlarmAlertContent({
         },
         onLoadError: (err) => {
           console.error('AlarmPlaylist: failed to load audio', alarm.name, track.title, err)
+          if (!cancelled) playFallbackAlarm()
         },
         onPlayError: (err) => {
           console.error('AlarmPlaylist: failed to play audio', alarm.name, track.title, err)
+          if (!cancelled) playFallbackAlarm()
         },
       })
     }
@@ -135,11 +174,15 @@ function AlarmAlertContent({
     playAlarm()
 
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('AlarmPlaylist', {
+      const n = new Notification('AlarmPlaylist', {
         body: `⏰ ${alarm.name}`,
         tag: alarm.id,
         requireInteraction: true,
       })
+      n.onclick = () => {
+        window.focus()
+        n.close()
+      }
     }
 
     return () => {
@@ -150,6 +193,7 @@ function AlarmAlertContent({
         youtubePlayer.stop()
         youtubePlayer.unload()
       }
+      stopFallbackAlarm()
       loadedRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,6 +208,7 @@ function AlarmAlertContent({
       audioPlayer.stop()
       audioPlayer.unload()
     }
+    stopFallbackAlarm()
     loadedRef.current = false
     if (wasPlayingRef.current) usePlayerStore.getState().resume()
     onClose()
@@ -180,6 +225,7 @@ function AlarmAlertContent({
       audioPlayer.stop()
       audioPlayer.unload()
     }
+    stopFallbackAlarm()
     loadedRef.current = false
     wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
@@ -197,10 +243,16 @@ function AlarmAlertContent({
   const snoozeLimit = alarm.maxSnoozes > 0 && snoozeCount >= alarm.maxSnoozes
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl">
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      aria-label={`${alarm.name} alarm`}
+      aria-live="assertive"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl"
+    >
       <div className="flex flex-col items-center gap-8 px-6 text-center">
         <div className="text-7xl font-bold tabular-nums text-white">
-          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
 
         <p className="text-2xl font-medium text-slate-200">{alarm.name}</p>
