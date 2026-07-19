@@ -12,7 +12,7 @@ describe('formatTime', () => {
 describe('formatDuration', () => {
   it('formats seconds', () => expect(formatDuration(45)).toBe('0:45'))
   it('formats minutes', () => expect(formatDuration(125)).toBe('2:05'))
-  it('formats hours', () => expect(formatDuration(3661)).toBe('61:01'))
+  it('formats hours', () => expect(formatDuration(3661)).toBe('1:01:01'))
 })
 
 describe('dayName', () => {

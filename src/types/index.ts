@@ -38,5 +38,3 @@ export interface Alarm {
   maxSnoozes: number
   createdAt: number
 }
-
-export type Page = 'alarms' | 'playlists' | 'player' | 'settings'
