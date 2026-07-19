@@ -117,7 +117,7 @@ class YouTubePlayerService implements Player {
     return this.initPromise
   }
 
-  load(videoId: string, events?: YouTubeEvents): Promise<void> {
+  load(videoId: string, events?: PlayerEvents): Promise<void> {
     this.unload()
     this.videoId = videoId
     this._events = events ?? {}
@@ -266,12 +266,16 @@ class YouTubePlayerService implements Player {
           this.fireEvent('onLoad')
           this.hasCalledLoad = false
         }
+        this.fireEvent('onBuffering', false)
         break
       case PS.CUED:
         if (this.hasCalledLoad) {
           this.fireEvent('onLoad')
           this.hasCalledLoad = false
         }
+        break
+      case PS.BUFFERING:
+        this.fireEvent('onBuffering', true)
         break
     }
   }
@@ -292,7 +296,7 @@ class YouTubePlayerService implements Player {
     }
   }
 
-  private fireEvent(name: keyof YouTubeEvents, ...args: unknown[]) {
+  private fireEvent(name: keyof PlayerEvents, ...args: unknown[]) {
     ;(this._events[name] as (...args: unknown[]) => void)?.(...args)
   }
 }

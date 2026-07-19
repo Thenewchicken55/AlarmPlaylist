@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { db } from '../db/db'
 import { storeAudioFile, deleteAudioFile, getAudioUrl } from '../db/audioStorage'
 import { getAudioDuration } from '../utils/audio'
+import { fetchYouTubePlaylist, parseYouTubePlaylistUrl } from '../services/youtube'
 import type { Playlist, Track, PlaylistSource } from '../types'
 
 interface CreatePlaylistInput {
@@ -28,6 +29,7 @@ interface PlaylistState {
   reorderTracks: (playlistId: string, fromIndex: number, toIndex: number) => Promise<void>
 
   importLocalFiles: (playlistId: string, files: FileList | File[]) => Promise<void>
+  refreshYouTubeTracks: (playlistId: string) => Promise<number>
 }
 
 function generateId(): string {
@@ -152,5 +154,33 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     set((s) => ({
       playlists: s.playlists.map((p) => (p.id === playlistId ? updated : p)),
     }))
+  },
+
+  refreshYouTubeTracks: async (playlistId) => {
+    const playlist = get().playlists.find((p) => p.id === playlistId)
+    if (!playlist || playlist.source !== 'youtube' || !playlist.sourceUrl) {
+      throw new Error('Not a YouTube playlist')
+    }
+
+    const ytPlaylistId = parseYouTubePlaylistUrl(playlist.sourceUrl)
+    if (!ytPlaylistId) {
+      throw new Error('Invalid YouTube playlist URL')
+    }
+
+    const result = await fetchYouTubePlaylist(ytPlaylistId)
+
+    // Merge without clobbering local edits: keep any non-YouTube tracks the
+    // user added (e.g. local files imported into a YouTube playlist) and
+    // preserve the existing order. YouTube tracks are replaced wholesale by
+    // sourceId (so removals / additions / metadata updates propagate), but
+    // the position of non-YouTube tracks is preserved.
+    const localTracks = playlist.tracks.filter((t) => t.source !== 'youtube')
+    const merged = [...localTracks, ...result.tracks]
+
+    await db.playlists.update(playlistId, { tracks: merged })
+    set((s) => ({
+      playlists: s.playlists.map((p) => (p.id === playlistId ? { ...p, tracks: merged } : p)),
+    }))
+    return result.tracks.length
   },
 }))

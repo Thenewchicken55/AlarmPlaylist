@@ -6,6 +6,7 @@ interface PlayerState {
   queue: Track[]
   queueIndex: number
   isPlaying: boolean
+  isBuffering: boolean
   volume: number
   progress: number
   duration: number
@@ -20,6 +21,7 @@ interface PlayerState {
   setVolume: (vol: number) => void
   setProgress: (prog: number) => void
   setDuration: (dur: number) => void
+  setBuffering: (buffering: boolean) => void
   next: () => void
   prev: () => void
   toggleShuffle: () => void
@@ -40,6 +42,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
   queueIndex: -1,
   isPlaying: false,
+  isBuffering: false,
   volume: 70,
   progress: 0,
   duration: 0,
@@ -75,6 +78,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setVolume: (vol) => set({ volume: Math.max(0, Math.min(100, vol)) }),
   setProgress: (prog) => set({ progress: prog }),
   setDuration: (dur) => set({ duration: dur }),
+  setBuffering: (buffering) => set({ isBuffering: buffering }),
 
   next: () => {
     const { queue, queueIndex, repeat, shuffle } = get()

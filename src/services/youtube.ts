@@ -1,85 +1,86 @@
 import type { Track } from '../types'
 
-type YouTubePlaylistItem = {
-  contentDetails?: { videoId?: string }
-  snippet: {
-    title: string
-    videoOwnerChannelTitle?: string
-    thumbnails?: { default?: { url: string } }
-  }
+type InvidiousVideo = {
+  videoId: string
+  title: string
+  author: string
+  lengthSeconds: number
+  videoThumbnails?: { url: string; quality: string; width: number; height: number }[]
 }
 
-const API_BASE = 'https://www.googleapis.com/youtube/v3'
+type InvidiousPlaylistResponse = {
+  title: string
+  videos: InvidiousVideo[]
+}
+
+const INSTANCES = ['inv.nadeko.net', 'inv.vern.cc']
 
 export function parseYouTubePlaylistUrl(url: string): string | null {
   try {
     const u = new URL(url)
     const list = u.searchParams.get('list')
-    if (list) return list
+    if (list && isPlaylistId(list)) return list
+    // Also accept youtube.com/playlist?list=... and youtu.be/...?list=...
+    // (already covered by the searchParams check above).
   } catch {
-    // Not a valid URL
+    // Not a URL — fall through to bare-id check below.
   }
-  if (/^[a-zA-Z0-9_-]{11,34}$/.test(url)) return url
+  // Bare playlist IDs (e.g. pasted directly): must start with a known prefix
+  // and be 13-34 chars. This rejects 11-char video IDs, which would otherwise
+  // hit the `/playlists/{id}` endpoint and 404.
+  if (isPlaylistId(url.trim())) return url.trim()
   return null
 }
 
-async function fetchWithPagination<T>(
-  endpoint: string,
-  params: Record<string, string>,
-  extractItem: (item: YouTubePlaylistItem) => T | null,
-): Promise<T[]> {
-  const items: T[] = []
-  let pageToken = ''
-
-  do {
-    const query = new URLSearchParams({ ...params, pageToken, maxResults: '50' })
-    const res = await fetch(`${API_BASE}/${endpoint}?${query}`)
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err?.error?.message || `YouTube API error: ${res.status}`)
-    }
-    const data: { items?: YouTubePlaylistItem[]; nextPageToken?: string } = await res.json()
-
-    for (const item of data.items ?? []) {
-      const extracted = extractItem(item)
-      if (extracted) items.push(extracted)
-    }
-    pageToken = data.nextPageToken || ''
-  } while (pageToken)
-
-  return items
+function isPlaylistId(s: string): boolean {
+  // YouTube playlist IDs start with PL/LL/FL/RD/UL/PU and are 13-34 chars of
+  // [A-Za-z0-9_-]. See https://webapps.stackexchange.com/a/106239
+  return /^(PL|LL|FL|RD|UL|PU)[A-Za-z0-9_-]{10,32}$/.test(s)
 }
 
-export async function fetchYouTubePlaylist(
-  playlistId: string,
-  apiKey: string,
-): Promise<{ title: string; tracks: Track[] }> {
-  const infoUrl = `${API_BASE}/playlists?part=snippet&id=${playlistId}&key=${apiKey}`
-  const infoRes = await fetch(infoUrl)
-  if (!infoRes.ok) {
-    const err = await infoRes.json().catch(() => ({}))
-    throw new Error(err?.error?.message || `YouTube API error: ${infoRes.status}`)
+function playlistUrl(host: string, playlistId: string): string {
+  return `https://${host}/api/v1/playlists/${playlistId}`
+}
+
+export async function fetchYouTubePlaylist(playlistId: string): Promise<{ title: string; tracks: Track[] }> {
+  const errors: string[] = []
+
+  // In dev, Vite proxies /api/invidious → inv.nadeko.net (avoids CORS).
+  // In production, try direct fetch (inv.nadeko.net sends ACAO: *).
+  const urls: string[] = []
+
+  if (import.meta.env.DEV) {
+    urls.push(`/api/invidious/api/v1/playlists/${playlistId}`)
   }
-  const infoData = await infoRes.json()
-  const title = infoData.items?.[0]?.snippet?.title ?? 'Untitled Playlist'
 
-  const tracks = await fetchWithPagination<Track>(
-    'playlistItems',
-    { part: 'snippet,contentDetails', playlistId, key: apiKey },
-    (item: YouTubePlaylistItem) => {
-      const videoId = item.contentDetails?.videoId
-      if (!videoId) return null
-      return {
-        id: videoId,
-        title: item.snippet.title,
-        artist: item.snippet.videoOwnerChannelTitle || 'YouTube',
-        duration: 0,
-        thumbnail: item.snippet.thumbnails?.default?.url,
-        source: 'youtube' as const,
-        sourceId: videoId,
+  for (const instance of INSTANCES) {
+    urls.push(playlistUrl(instance, playlistId))
+  }
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) {
+        errors.push(`${url} returned ${res.status}`)
+        continue
       }
-    },
-  )
+      const data: InvidiousPlaylistResponse = await res.json()
 
-  return { title, tracks }
+      const tracks: Track[] = data.videos.map((v) => ({
+        id: v.videoId,
+        title: v.title,
+        artist: v.author || 'YouTube',
+        duration: v.lengthSeconds,
+        thumbnail: v.videoThumbnails?.find((t) => t.quality === 'default')?.url ?? v.videoThumbnails?.[0]?.url,
+        source: 'youtube' as const,
+        sourceId: v.videoId,
+      }))
+
+      return { title: data.title, tracks }
+    } catch (err) {
+      errors.push(`${url} — ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  throw new Error(`Could not fetch playlist from any Invidious instance.\n${errors.join('\n')}`)
 }

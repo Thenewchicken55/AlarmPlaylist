@@ -5,6 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/AlarmPlaylist/',
+  server: {
+    proxy: {
+      '/api/invidious': {
+        target: 'https://inv.nadeko.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/invidious/, ''),
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -43,15 +52,6 @@ export default defineConfig({
           },
         ],
         // Generate screenshots: node scripts/generate-screenshots.mjs
-      },
-      workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: { cacheName: 'google-fonts', expiration: { maxEntries: 10, maxAgeSeconds: 86400 * 365 } },
-          },
-        ],
       },
     }),
   ],

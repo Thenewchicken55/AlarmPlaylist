@@ -16,6 +16,17 @@ routing.registerRoute(
   })
 )
 
+// Cache Invidious playlist API responses (used for YouTube playlist imports)
+// with a stale-while-revalidate strategy so the app can show cached data
+// while refreshing in the background, and works briefly offline.
+routing.registerRoute(
+  ({ url }) => /\/api\/v1\/playlists\//.test(url.pathname),
+  new strategies.StaleWhileRevalidate({
+    cacheName: 'invidious-playlists',
+    plugins: [new expiration.ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 86400 * 7 })],
+  })
+)
+
 // Periodic background sync for alarm reliability (Android Chrome)
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'alarm-check') {
@@ -38,6 +49,3 @@ self.addEventListener('message', (event) => {
     )
   }
 })
-
-// Log all fetch events for debugging
-self.addEventListener('fetch', () => {})

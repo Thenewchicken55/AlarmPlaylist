@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, Trash2, FolderOpen, FileText } from 'lucide-react'
+import { ArrowLeft, Play, Trash2, FolderOpen, FileText, RefreshCw } from 'lucide-react'
 import TrackList from '../components/playlist/TrackList'
 import Button from '../components/ui/Button'
 import { usePlaylistStore } from '../stores/playlistStore'
@@ -24,6 +24,8 @@ export default function PlaylistDetailPage() {
   const reorderTracks = usePlaylistStore((s) => s.reorderTracks)
   const importLocalFiles = usePlaylistStore((s) => s.importLocalFiles)
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist)
+  const refreshYouTubeTracks = usePlaylistStore((s) => s.refreshYouTubeTracks)
+  const [refreshing, setRefreshing] = useState(false)
 
   const playQueue = usePlayerStore((s) => s.playQueue)
   const playTrack = usePlayerStore((s) => s.playTrack)
@@ -131,6 +133,22 @@ export default function PlaylistDetailPage() {
     }
   }
 
+  async function handleRefreshYouTube() {
+    if (!playlist.sourceUrl) {
+      toast.error('This playlist has no YouTube source URL to refresh from')
+      return
+    }
+    setRefreshing(true)
+    try {
+      const count = await refreshYouTubeTracks(playlist.id)
+      toast.success(`Refreshed — ${count} ${pluralize(count, 'track')}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to refresh playlist')
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   function handlePlayTrack(track: Track, index: number) {
     playTrack(track, playlist.tracks, index)
     navigate('/player')
@@ -177,6 +195,12 @@ export default function PlaylistDetailPage() {
                 Import .m3u
               </Button>
               <input ref={m3uInputRef} type="file" accept=".m3u,.pls" className="hidden" onChange={handleImportM3U} />
+              {playlist.source === 'youtube' && (
+                <Button variant="secondary" size="sm" onClick={handleRefreshYouTube} loading={refreshing}>
+                  <RefreshCw size={16} />
+                  Refresh
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleDelete}>
                 <Trash2 size={16} />
               </Button>

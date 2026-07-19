@@ -3,6 +3,7 @@ export interface PlayerEvents {
   onLoad?: () => void
   onLoadError?: (error: unknown) => void
   onPlayError?: (error: unknown) => void
+  onBuffering?: (isBuffering: boolean) => void
 }
 
 /** Unified interface implemented by AudioPlayerService and YouTubePlayerService. */

@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { parseYouTubePlaylistUrl, fetchYouTubePlaylist } from '../../services/youtube'
 import type { PlaylistSource, Track } from '../../types'
-
 interface CreatePlaylistModalProps {
   open: boolean
   onClose: () => void
@@ -38,12 +37,6 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
   const addTrack = usePlaylistStore((s) => s.addTrack)
 
   async function handleFetch() {
-    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY
-    if (!apiKey) {
-      toast.error('YouTube API Key not configured. Set VITE_YOUTUBE_API_KEY in .env')
-      return
-    }
-
     const playlistId = parseYouTubePlaylistUrl(url.trim())
     if (!playlistId) {
       toast.error('Invalid YouTube playlist URL')
@@ -52,7 +45,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
 
     setLoading(true)
     try {
-      const result = await fetchYouTubePlaylist(playlistId, apiKey)
+      const result = await fetchYouTubePlaylist(playlistId)
       setFetchedTracks(result.tracks)
       setPlaylistTitle(result.title)
       setName(result.title)
@@ -80,7 +73,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       }
 
       toast.success(`Imported "${playlist.name}" (${fetchedTracks.length} tracks)`)
-      onClose()
+      handleClose()
     } catch {
       toast.error('Failed to import playlist')
     } finally {
@@ -96,7 +89,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
     try {
       await createPlaylist({ name: name.trim(), source, color })
       toast.success('Playlist created')
-      onClose()
+      handleClose()
     } catch {
       toast.error('Failed to create playlist')
     } finally {
@@ -112,10 +105,18 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
     setColor(colors[0])
   }
 
+  // Wrap onClose so every close path (Cancel button, Escape, backdrop click,
+  // submit success) resets the form. Previously a fetched-but-not-imported
+  // playlist would linger into the next open.
+  function handleClose() {
+    reset()
+    onClose()
+  }
+
   const showRemoteConfig = source !== 'local'
 
   return (
-    <Modal open={open} onClose={onClose} title="New Playlist">
+    <Modal open={open} onClose={handleClose} title="New Playlist">
       <div className="space-y-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-slate-300">Source</label>
@@ -168,7 +169,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="secondary" type="button" onClick={onClose}>
+              <Button variant="secondary" type="button" onClick={handleClose}>
                 Cancel
               </Button>
               <Button type="submit" loading={loading}>
@@ -244,7 +245,7 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
-                  <Button variant="secondary" onClick={onClose}>
+                  <Button variant="secondary" onClick={handleClose}>
                     Cancel
                   </Button>
                   <Button onClick={handleImport} loading={loading}>
