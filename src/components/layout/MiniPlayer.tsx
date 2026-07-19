@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { usePlayerStore } from '../../stores/playerStore'
 import AlbumArt from '../player/AlbumArt'
 import TrackInfo from '../player/TrackInfo'
+import MiniProgress from './MiniProgress'
 
 export default function MiniPlayer() {
   const navigate = useNavigate()
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
-  const progress = usePlayerStore((s) => s.progress)
-  const duration = usePlayerStore((s) => s.duration)
+  const isBuffering = usePlayerStore((s) => s.isBuffering)
   const pause = usePlayerStore((s) => s.pause)
   const resume = usePlayerStore((s) => s.resume)
 
@@ -21,6 +21,7 @@ export default function MiniPlayer() {
         <button onClick={() => navigate('/player')} className="flex flex-1 items-center gap-3 min-w-0">
           <AlbumArt track={currentTrack} size="sm" />
           <TrackInfo track={currentTrack} compact />
+          {isBuffering && <span className="text-xs text-slate-400 animate-pulse">Buffering…</span>}
         </button>
 
         <div className="flex items-center gap-2">
@@ -30,18 +31,14 @@ export default function MiniPlayer() {
               if (isPlaying) pause()
               else resume()
             }}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500"
           >
             {isPlaying ? <Pause size={16} /> : <Play size={16} style={{ marginLeft: 1 }} />}
           </button>
         </div>
       </div>
-      <div className="h-0.5 bg-slate-800">
-        <div
-          className="h-full bg-indigo-500 transition-all duration-200"
-          style={{ width: `${duration > 0 ? (progress / 100) * 100 : 0}%` }}
-        />
-      </div>
+      <MiniProgress />
     </div>
   )
 }

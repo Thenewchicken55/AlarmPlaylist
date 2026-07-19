@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { GripVertical, Play, Trash2, Music } from 'lucide-react'
 import type { Track } from '../../types'
 import { formatDuration } from '../../utils/time'
@@ -10,7 +11,7 @@ interface TrackRowProps {
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>
 }
 
-export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandleProps }: TrackRowProps) {
+function TrackRowComponent({ track, isPlaying, onPlay, onRemove, dragHandleProps }: TrackRowProps) {
   return (
     <div
       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
@@ -19,6 +20,7 @@ export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandl
     >
       <button
         {...dragHandleProps}
+        aria-label="Drag to reorder"
         className="cursor-grab rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100"
       >
         <GripVertical size={16} />
@@ -26,6 +28,7 @@ export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandl
 
       <button
         onClick={onPlay}
+        aria-label={isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
         className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-400 transition-colors hover:bg-indigo-600 hover:text-white"
       >
         {isPlaying ? (
@@ -59,6 +62,7 @@ export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandl
 
       <button
         onClick={onRemove}
+        aria-label={`Remove ${track.title} from playlist`}
         className="flex-shrink-0 rounded-lg p-1.5 text-slate-600 opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
       >
         <Trash2 size={14} />
@@ -66,3 +70,6 @@ export default function TrackRow({ track, isPlaying, onPlay, onRemove, dragHandl
     </div>
   )
 }
+
+const TrackRow = memo(TrackRowComponent)
+export default TrackRow

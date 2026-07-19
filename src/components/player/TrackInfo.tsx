@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { Track } from '../../types'
 import { truncate } from '../../utils/format'
 
@@ -6,7 +7,7 @@ interface TrackInfoProps {
   compact?: boolean
 }
 
-export default function TrackInfo({ track, compact }: TrackInfoProps) {
+function TrackInfoComponent({ track, compact }: TrackInfoProps) {
   if (!track) {
     return (
       <div className="text-center">
@@ -32,3 +33,6 @@ export default function TrackInfo({ track, compact }: TrackInfoProps) {
     </div>
   )
 }
+
+const TrackInfo = memo(TrackInfoComponent)
+export default TrackInfo

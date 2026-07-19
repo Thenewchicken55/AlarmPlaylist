@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import Toggle from '../ui/Toggle'
 import { formatTime, daysLabel } from '../../utils/time'
@@ -10,7 +11,7 @@ interface AlarmCardProps {
   onDelete: () => void
 }
 
-export default function AlarmCard({ alarm, onToggle, onEdit, onDelete }: AlarmCardProps) {
+function AlarmCardComponent({ alarm, onToggle, onEdit, onDelete }: AlarmCardProps) {
   return (
     <div
       className={`rounded-xl border p-4 transition-colors ${
@@ -33,19 +34,24 @@ export default function AlarmCard({ alarm, onToggle, onEdit, onDelete }: AlarmCa
         <div className="flex items-center gap-2">
           <button
             onClick={onEdit}
+            aria-label={`Edit alarm "${alarm.name}"`}
             className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
           >
             <Pencil size={16} />
           </button>
           <button
             onClick={onDelete}
+            aria-label={`Delete alarm "${alarm.name}"`}
             className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-800 hover:text-red-400"
           >
             <Trash2 size={16} />
           </button>
-          <Toggle checked={alarm.enabled} onChange={onToggle} />
+          <Toggle checked={alarm.enabled} onChange={onToggle} aria-label={`Toggle alarm "${alarm.name}"`} />
         </div>
       </div>
     </div>
   )
 }
+
+const AlarmCard = memo(AlarmCardComponent)
+export default AlarmCard

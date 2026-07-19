@@ -62,6 +62,9 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
               e.stopPropagation()
               setMenuOpen(!menuOpen)
             }}
+            aria-label={`More options for playlist "${playlist.name}"`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800 hover:text-slate-300"
           >
             <MoreVertical size={16} />
@@ -72,10 +75,14 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
       {menuOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-          <div className="absolute right-2 top-2 z-50 w-40 rounded-xl border border-slate-700 bg-slate-900 py-1 shadow-xl">
+          <div
+            className="absolute right-2 top-2 z-50 w-40 rounded-xl border border-slate-700 bg-slate-900 py-1 shadow-xl"
+            role="menu"
+          >
             <button
               onClick={handleExport}
               disabled={playlist.tracks.length === 0}
+              role="menuitem"
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800 disabled:opacity-40"
             >
               <Download size={14} />
@@ -86,6 +93,7 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
                 setMenuOpen(false)
                 onDelete()
               }}
+              role="menuitem"
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-slate-800"
             >
               <Trash2 size={14} />
