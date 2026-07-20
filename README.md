@@ -2,12 +2,6 @@
 
 A cross-platform alarm clock that wakes you up with music from your playlists. Set an alarm with a specific song or let it pick a random track — works with local audio files, YouTube playlists, and M3U/PLS imports.
 
-**Demo:** [https://Thenewchicken55.github.io/AlarmPlaylist/](https://Thenewchicken55.github.io/AlarmPlaylist/)
-
-## Preview
-
-<!-- Add screenshot or illustration here -->
-
 ## Tech Stack
 
 | Concern    | Library                                                     |
@@ -37,13 +31,16 @@ npm run format  # Prettier write
 
 ### YouTube Playlists
 
-Importing a YouTube playlist does **not** require any API keys — the app fetches
-playlist metadata from public Invidious instances. A Vite dev-server proxy
-(`/api/invidious → inv.nadeko.net`) avoids CORS in development; in production the
-app calls the instances directly (they send `Access-Control-Allow-Origin: *`).
+Importing a YouTube playlist does **not** require any API keys by default — the app fetches playlist metadata from public Invidious instances.
 
-If you want to point the app at your own Invidious instance, edit the `INSTANCES`
-list in `src/services/youtube.ts`.
+For **large playlists** (3,000+ videos), public Invidious instances often time out or return 0 results. To reliably import these, add a free YouTube Data API v3 key in **Settings → YouTube API Key**:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create an API key (not OAuth)
+3. Enable the YouTube Data API v3 for that key
+4. Paste it in Settings
+
+The key is stored locally in your browser (never sent anywhere except Google's API). Free quota: 10,000 units/day — enough for ~200 large playlist imports per day.
 
 ## ⚠️ Alarm Reliability Limitations
 

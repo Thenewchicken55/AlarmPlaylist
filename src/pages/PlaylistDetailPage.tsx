@@ -139,11 +139,14 @@ export default function PlaylistDetailPage() {
       return
     }
     setRefreshing(true)
+    const toastId = toast.loading('Refreshing playlist…')
     try {
-      const count = await refreshYouTubeTracks(playlist.id)
-      toast.success(`Refreshed — ${count} ${pluralize(count, 'track')}`)
+      const count = await refreshYouTubeTracks(playlist.id, (loaded, total) => {
+        if (total > 50) toast.loading(`Refreshing… ${loaded}/${total}`, { id: toastId })
+      })
+      toast.success(`Refreshed — ${count} ${pluralize(count, 'track')}`, { id: toastId })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to refresh playlist')
+      toast.error(err instanceof Error ? err.message : 'Failed to refresh playlist', { id: toastId })
     } finally {
       setRefreshing(false)
     }

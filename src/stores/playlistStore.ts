@@ -29,7 +29,7 @@ interface PlaylistState {
   reorderTracks: (playlistId: string, fromIndex: number, toIndex: number) => Promise<void>
 
   importLocalFiles: (playlistId: string, files: FileList | File[]) => Promise<void>
-  refreshYouTubeTracks: (playlistId: string) => Promise<number>
+  refreshYouTubeTracks: (playlistId: string, onProgress?: (loaded: number, total: number) => void) => Promise<number>
 }
 
 function generateId(): string {
@@ -156,7 +156,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }))
   },
 
-  refreshYouTubeTracks: async (playlistId) => {
+  refreshYouTubeTracks: async (playlistId, onProgress) => {
     const playlist = get().playlists.find((p) => p.id === playlistId)
     if (!playlist || playlist.source !== 'youtube' || !playlist.sourceUrl) {
       throw new Error('Not a YouTube playlist')
@@ -167,7 +167,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       throw new Error('Invalid YouTube playlist URL')
     }
 
-    const result = await fetchYouTubePlaylist(ytPlaylistId)
+    const result = await fetchYouTubePlaylist(ytPlaylistId, onProgress)
 
     // Merge without clobbering local edits: keep any non-YouTube tracks the
     // user added (e.g. local files imported into a YouTube playlist) and

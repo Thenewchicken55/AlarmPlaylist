@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Moon, Sun, Monitor, Bell, Download, Info, HardDrive } from 'lucide-react'
+import { Moon, Sun, Monitor, Bell, Download, Info, HardDrive, Play, ExternalLink } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
+import Input from '../components/ui/Input'
 import { useUIStore } from '../stores/uiStore'
 import { getStorageInfo } from '../db/audioStorage'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { formatFileSize } from '../utils/format'
 import { checkStorageQuota, isPrivateBrowsing } from '../utils/storage'
+import { getYouTubeApiKey, setYouTubeApiKey } from '../services/youtube'
 import { toast } from 'sonner'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -27,6 +29,7 @@ export default function SettingsPage() {
 
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const [storageInfo, setStorageInfo] = useState({ totalFiles: 0, totalSize: 0 })
+  const [apiKey, setApiKeyState] = useState(getYouTubeApiKey)
 
   useInstallPrompt()
 
@@ -127,6 +130,45 @@ export default function SettingsPage() {
               </Button>
             )}
           </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-slate-800 p-2">
+              <Play size={18} className="text-red-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-200">YouTube API Key</p>
+              <p className="text-xs text-slate-500">
+                Optional — enables importing large playlists (3k+ videos) that Invidious can't handle
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKeyState(e.target.value)}
+              placeholder="AIza…"
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                setYouTubeApiKey(apiKey)
+                toast.success(apiKey.trim() ? 'API key saved' : 'API key removed')
+              }}
+            >
+              Save
+            </Button>
+          </div>
+          <a
+            href="https://console.cloud.google.com/apis/credentials"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+          >
+            Get a free API key <ExternalLink size={12} />
+          </a>
         </Card>
 
         {installPromptEvent && (
