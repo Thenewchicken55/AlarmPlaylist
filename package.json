@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "postbuild": "node scripts/copy-404.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
