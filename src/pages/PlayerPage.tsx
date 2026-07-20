@@ -25,7 +25,7 @@ export default function PlayerPage() {
   return (
     <div className="flex flex-col items-center px-6 pt-8 pb-4" style={{ minHeight: 'calc(100dvh - 4rem)' }}>
       <div className="flex w-full max-w-md flex-1 flex-col items-center justify-center gap-8">
-        <AlbumArt track={currentTrack} />
+        <AlbumArt />
 
         <TrackInfo track={currentTrack} />
 

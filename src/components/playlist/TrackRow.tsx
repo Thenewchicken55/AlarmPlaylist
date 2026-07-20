@@ -43,13 +43,9 @@ function TrackRowComponent({ track, isPlaying, onPlay, onRemove, dragHandleProps
       </button>
 
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        {track.thumbnail ? (
-          <img src={track.thumbnail} alt="" className="h-9 w-9 flex-shrink-0 rounded-md object-cover" />
-        ) : (
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-slate-800">
-            <Music size={16} className="text-slate-600" />
-          </div>
-        )}
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-slate-800">
+          <Music size={16} className="text-slate-600" />
+        </div>
         <div className="min-w-0">
           <p className={`truncate text-sm font-medium ${isPlaying ? 'text-indigo-400' : 'text-slate-200'}`}>
             {track.title}

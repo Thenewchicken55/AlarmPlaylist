@@ -19,7 +19,7 @@ export default function MiniPlayer() {
     <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-slate-800 bg-slate-900/95 backdrop-blur md:bottom-0 md:left-60">
       <div className="flex items-center gap-3 px-4 py-2">
         <button onClick={() => navigate('/player')} className="flex flex-1 items-center gap-3 min-w-0">
-          <AlbumArt track={currentTrack} size="sm" />
+          <AlbumArt size="sm" />
           <TrackInfo track={currentTrack} compact />
           {isBuffering && <span className="text-xs text-slate-400 animate-pulse">Buffering…</span>}
         </button>
