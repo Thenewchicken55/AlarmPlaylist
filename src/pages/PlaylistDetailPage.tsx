@@ -30,6 +30,9 @@ export default function PlaylistDetailPage() {
   const playQueue = usePlayerStore((s) => s.playQueue)
   const playTrack = usePlayerStore((s) => s.playTrack)
   const currentTrack = usePlayerStore((s) => s.currentTrack)
+  const isPlaying = usePlayerStore((s) => s.isPlaying)
+  const pause = usePlayerStore((s) => s.pause)
+  const resume = usePlayerStore((s) => s.resume)
 
   useEffect(() => {
     loadPlaylists()
@@ -153,6 +156,14 @@ export default function PlaylistDetailPage() {
   }
 
   function handlePlayTrack(track: Track, index: number) {
+    // Re-clicking the row of the track that's already loaded toggles
+    // pause/resume (matching the row's "now playing" indicator) instead of
+    // restarting it from the beginning.
+    if (track.id === currentTrack?.id) {
+      if (isPlaying) pause()
+      else resume()
+      return
+    }
     playTrack(track, playlist.tracks, index)
     navigate('/player')
   }
@@ -216,6 +227,7 @@ export default function PlaylistDetailPage() {
         tracks={playlist.tracks}
         playlistId={playlist.id}
         currentTrackId={currentTrack?.id}
+        isPlaying={isPlaying}
         onPlay={handlePlayTrack}
         onRemove={(trackId) => removeTrack(playlist.id, trackId)}
         onReorder={(from, to) => reorderTracks(playlist.id, from, to)}

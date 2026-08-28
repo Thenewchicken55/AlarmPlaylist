@@ -11,6 +11,7 @@ interface TrackListProps {
   tracks: Track[]
   playlistId: string
   currentTrackId?: string | null
+  isPlaying?: boolean
   onPlay: (track: Track, index: number) => void
   onRemove: (trackId: string) => void
   onReorder: (fromIndex: number, toIndex: number) => void
@@ -19,11 +20,13 @@ interface TrackListProps {
 
 function SortableTrackRow({
   track,
+  active,
   isPlaying,
   onPlay,
   onRemove,
 }: {
   track: Track
+  active: boolean
   isPlaying: boolean
   onPlay: () => void
   onRemove: () => void
@@ -38,6 +41,7 @@ function SortableTrackRow({
     <div ref={setNodeRef} style={style} className={`rounded-lg ${isDragging ? 'opacity-50' : ''}`}>
       <TrackRow
         track={track}
+        active={active}
         isPlaying={isPlaying}
         onPlay={onPlay}
         onRemove={onRemove}
@@ -50,6 +54,7 @@ function SortableTrackRow({
 export default function TrackList({
   tracks,
   currentTrackId,
+  isPlaying,
   onPlay,
   onRemove,
   onReorder,
@@ -118,15 +123,19 @@ export default function TrackList({
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={tracks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-0.5">
-            {tracks.map((track) => (
-              <SortableTrackRow
-                key={track.id}
-                track={track}
-                isPlaying={track.id === currentTrackId}
-                onPlay={() => onPlay(track, tracks.indexOf(track))}
-                onRemove={() => onRemove(track.id)}
-              />
-            ))}
+            {tracks.map((track) => {
+              const active = track.id === currentTrackId
+              return (
+                <SortableTrackRow
+                  key={track.id}
+                  track={track}
+                  active={active}
+                  isPlaying={active && !!isPlaying}
+                  onPlay={() => onPlay(track, tracks.indexOf(track))}
+                  onRemove={() => onRemove(track.id)}
+                />
+              )
+            })}
           </div>
         </SortableContext>
       </DndContext>

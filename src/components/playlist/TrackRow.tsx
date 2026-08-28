@@ -5,17 +5,18 @@ import { formatDuration } from '../../utils/time'
 
 interface TrackRowProps {
   track: Track
+  active?: boolean
   isPlaying?: boolean
   onPlay: () => void
   onRemove: () => void
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>
 }
 
-function TrackRowComponent({ track, isPlaying, onPlay, onRemove, dragHandleProps }: TrackRowProps) {
+function TrackRowComponent({ track, active, isPlaying, onPlay, onRemove, dragHandleProps }: TrackRowProps) {
   return (
     <div
       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
-        isPlaying ? 'bg-indigo-600/10' : 'hover:bg-slate-800'
+        active ? 'bg-indigo-600/10' : 'hover:bg-slate-800'
       }`}
     >
       <button
@@ -47,7 +48,7 @@ function TrackRowComponent({ track, isPlaying, onPlay, onRemove, dragHandleProps
           <Music size={16} className="text-slate-600" />
         </div>
         <div className="min-w-0">
-          <p className={`truncate text-sm font-medium ${isPlaying ? 'text-indigo-400' : 'text-slate-200'}`}>
+          <p className={`truncate text-sm font-medium ${active ? 'text-indigo-400' : 'text-slate-200'}`}>
             {track.title}
           </p>
           <p className="truncate text-xs text-slate-500">{track.artist}</p>
