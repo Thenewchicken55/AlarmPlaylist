@@ -10,3 +10,6 @@ coverage/
 tmp/
 CUsers*
 *.tsbuildinfo
+.playwright-mcp/
+bun.lock
+src-tauri/target/

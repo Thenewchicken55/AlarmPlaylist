@@ -25,9 +25,9 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
   const [specificTrackId, setSpecificTrackId] = useState<string | null>(editAlarm?.specificTrackId ?? null)
   const [volume, setVolume] = useState(editAlarm?.volume ?? 70)
   const [fadeIn, setFadeIn] = useState(editAlarm?.fadeIn ?? false)
-  const [fadeInDuration] = useState(editAlarm?.fadeInDuration ?? 5)
-  const [snoozeMinutes] = useState(editAlarm?.snoozeMinutes ?? 5)
-  const [maxSnoozes] = useState(editAlarm?.maxSnoozes ?? 3)
+  const [fadeInDuration, setFadeInDuration] = useState(editAlarm?.fadeInDuration ?? 5)
+  const [snoozeMinutes, setSnoozeMinutes] = useState(editAlarm?.snoozeMinutes ?? 5)
+  const [maxSnoozes, setMaxSnoozes] = useState(editAlarm?.maxSnoozes ?? 3)
   const [loading, setLoading] = useState(false)
 
   const createAlarm = useAlarmStore((s) => s.createAlarm)
@@ -172,9 +172,58 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-slate-300">Fade in</label>
-          <Toggle checked={fadeIn} onChange={setFadeIn} />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-slate-300">Fade in</label>
+            <Toggle checked={fadeIn} onChange={setFadeIn} />
+          </div>
+          {fadeIn && (
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="fade-duration" className="text-xs text-slate-500">
+                Fade duration
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="fade-duration"
+                  type="number"
+                  min={1}
+                  max={120}
+                  value={fadeInDuration}
+                  onChange={(e) => setFadeInDuration(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-100 outline-none focus:border-indigo-500"
+                />
+                <span className="text-xs text-slate-500">seconds</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-slate-300">Snooze</label>
+          <div className="flex gap-3">
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={snoozeMinutes}
+                onChange={(e) => setSnoozeMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-16 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-100 outline-none focus:border-indigo-500"
+              />
+              <span className="text-xs text-slate-500">minutes</span>
+            </div>
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={maxSnoozes}
+                onChange={(e) => setMaxSnoozes(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-16 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1 text-sm text-slate-100 outline-none focus:border-indigo-500"
+              />
+              <span className="text-xs text-slate-500">max times (0 = unlimited)</span>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

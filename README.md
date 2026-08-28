@@ -29,6 +29,19 @@ npm run lint    # ESLint
 npm run format  # Prettier write
 ```
 
+### Desktop build (Windows/macOS/Linux)
+
+The web app can also be packaged as a native desktop app via [Tauri](https://tauri.app),
+using the OS's built-in WebView (no Electron/Chromium bundle needed):
+
+```bash
+npm run tauri:dev    # Run the app in a native window with hot reload
+npm run tauri:build  # Produce an installer (.msi/.exe on Windows) in src-tauri/target/release/bundle
+```
+
+Requires the [Rust toolchain](https://rustup.rs) and, on Windows, the "Desktop development
+with C++" workload from the [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022).
+
 ### YouTube Playlists
 
 Importing a YouTube playlist does **not** require any API keys by default — the app fetches playlist metadata from public Invidious instances.
