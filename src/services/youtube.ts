@@ -50,51 +50,80 @@ export function setYouTubeApiKey(key: string) {
 
 const INSTANCES = ['inv.nadeko.net', 'inv.vern.cc']
 
-function playlistUrl(host: string, playlistId: string): string {
-  return `https://${host}/api/v1/playlists/${playlistId}`
+const MAX_INVIDIOUS_PAGES = 100 // safety cap (~100 videos/page ⇒ up to ~10,000 tracks)
+
+function toTrack(v: InvidiousVideo): Track {
+  return {
+    id: v.videoId,
+    title: v.title,
+    artist: v.author || 'YouTube',
+    duration: v.lengthSeconds,
+    source: 'youtube' as const,
+    sourceId: v.videoId,
+  }
 }
 
 async function fetchViaInvidious(
   playlistId: string,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<{ title: string; tracks: Track[] }> {
+): Promise<{ title: string; tracks: Track[]; partial?: boolean }> {
   const errors: string[] = []
 
-  const urls: string[] = []
+  const hosts: string[] = []
   if (import.meta.env.DEV) {
-    urls.push(`/api/invidious/api/v1/playlists/${playlistId}`)
+    hosts.push('/api/invidious')
   }
   for (const instance of INSTANCES) {
-    urls.push(playlistUrl(instance, playlistId))
+    hosts.push(`https://${instance}`)
   }
 
-  for (const url of urls) {
+  for (const host of hosts) {
+    const firstUrl = `${host}/api/v1/playlists/${playlistId}`
     try {
-      const res = await fetch(url)
+      const res = await fetch(firstUrl)
       if (!res.ok) {
-        errors.push(`${url} returned ${res.status}`)
+        errors.push(`${firstUrl} returned ${res.status}`)
         continue
       }
       const data: InvidiousPlaylistResponse = await res.json()
 
       if (!data.videos || data.videos.length === 0) {
-        errors.push(`${url} returned 0 videos (playlist may be too large for keyless import)`)
+        errors.push(`${firstUrl} returned 0 videos (playlist may be too large for keyless import)`)
         continue
       }
 
-      const tracks: Track[] = data.videos.map((v) => ({
-        id: v.videoId,
-        title: v.title,
-        artist: v.author || 'YouTube',
-        duration: v.lengthSeconds,
-        source: 'youtube' as const,
-        sourceId: v.videoId,
-      }))
-
+      const tracks: Track[] = data.videos.map(toTrack)
       onProgress?.(tracks.length, tracks.length)
-      return { title: data.title, tracks }
+
+      // Keep paging until a page comes back empty (the real end-of-list
+      // signal — page sizes aren't consistent, so a shorter page doesn't
+      // mean we're done). A fetch error mid-pagination still returns
+      // whatever we've accumulated so far (marked partial) rather than
+      // discarding it.
+      let page = 2
+      let partial = false
+      while (page <= MAX_INVIDIOUS_PAGES) {
+        try {
+          const pageRes = await fetch(`${host}/api/v1/playlists/${playlistId}?page=${page}`)
+          if (!pageRes.ok) {
+            partial = true
+            break
+          }
+          const pageData: InvidiousPlaylistResponse = await pageRes.json()
+          if (!pageData.videos || pageData.videos.length === 0) break
+
+          tracks.push(...pageData.videos.map(toTrack))
+          onProgress?.(tracks.length, tracks.length)
+          page++
+        } catch {
+          partial = true
+          break
+        }
+      }
+
+      return { title: data.title, tracks, partial: partial || undefined }
     } catch (err) {
-      errors.push(`${url} — ${err instanceof Error ? err.message : String(err)}`)
+      errors.push(`${firstUrl} — ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -145,7 +174,7 @@ async function fetchViaYouTubeAPI(
   playlistId: string,
   apiKey: string,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<{ title: string; tracks: Track[] }> {
+): Promise<{ title: string; tracks: Track[]; partial?: boolean }> {
   // 1. Get playlist title + total count
   const metaRes = await fetch(`${YT_API_BASE}/playlists?part=snippet,contentDetails&id=${playlistId}&key=${apiKey}`)
   if (!metaRes.ok) {
@@ -168,57 +197,67 @@ async function fetchViaYouTubeAPI(
   const title = meta.items[0].snippet.title
   const total = meta.items[0].contentDetails.itemCount
 
-  // 2. Paginate playlistItems (50 per page) + fetch durations in batches
+  // 2. Paginate playlistItems (50 per page) + fetch durations in batches.
+  // A failure partway through (quota exhaustion, transient network error,
+  // etc.) returns whatever was fetched so far, marked partial, rather than
+  // discarding all progress.
   const tracks: Track[] = []
   let pageToken: string | undefined = undefined
+  let partial = false
 
   do {
-    const url =
-      `${YT_API_BASE}/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}` +
-      (pageToken ? `&pageToken=${pageToken}` : '')
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`YouTube API error: ${res.status}`)
-    const data: PlaylistItemsResponse = await res.json()
+    try {
+      const url =
+        `${YT_API_BASE}/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}` +
+        (pageToken ? `&pageToken=${pageToken}` : '')
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`YouTube API error: ${res.status}`)
+      const data: PlaylistItemsResponse = await res.json()
 
-    // Collect video IDs for the duration lookup
-    const pageItems = data.items
-      .filter((item) => item.snippet?.resourceId?.videoId)
-      .map((item) => ({
-        videoId: item.snippet.resourceId.videoId,
-        title: item.snippet.title,
-        author: item.snippet.videoOwnerChannelTitle || 'YouTube',
-      }))
+      // Collect video IDs for the duration lookup
+      const pageItems = data.items
+        .filter((item) => item.snippet?.resourceId?.videoId)
+        .map((item) => ({
+          videoId: item.snippet.resourceId.videoId,
+          title: item.snippet.title,
+          author: item.snippet.videoOwnerChannelTitle || 'YouTube',
+        }))
 
-    // Fetch durations for this batch (videos.list, up to 50 IDs per call)
-    const videoIds = pageItems.map((p) => p.videoId)
-    const durations = new Map<string, number>()
+      // Fetch durations for this batch (videos.list, up to 50 IDs per call)
+      const videoIds = pageItems.map((p) => p.videoId)
+      const durations = new Map<string, number>()
 
-    if (videoIds.length > 0) {
-      const vidRes = await fetch(`${YT_API_BASE}/videos?part=contentDetails&id=${videoIds.join(',')}&key=${apiKey}`)
-      if (vidRes.ok) {
-        const vidData: VideosResponse = await vidRes.json()
-        for (const item of vidData.items) {
-          durations.set(item.id, parseISODuration(item.contentDetails.duration))
+      if (videoIds.length > 0) {
+        const vidRes = await fetch(`${YT_API_BASE}/videos?part=contentDetails&id=${videoIds.join(',')}&key=${apiKey}`)
+        if (vidRes.ok) {
+          const vidData: VideosResponse = await vidRes.json()
+          for (const item of vidData.items) {
+            durations.set(item.id, parseISODuration(item.contentDetails.duration))
+          }
         }
       }
-    }
 
-    for (const item of pageItems) {
-      tracks.push({
-        id: item.videoId,
-        title: item.title,
-        artist: item.author,
-        duration: durations.get(item.videoId) ?? 0,
-        source: 'youtube' as const,
-        sourceId: item.videoId,
-      })
-    }
+      for (const item of pageItems) {
+        tracks.push({
+          id: item.videoId,
+          title: item.title,
+          artist: item.author,
+          duration: durations.get(item.videoId) ?? 0,
+          source: 'youtube' as const,
+          sourceId: item.videoId,
+        })
+      }
 
-    onProgress?.(tracks.length, total)
-    pageToken = data.nextPageToken
+      onProgress?.(tracks.length, total)
+      pageToken = data.nextPageToken
+    } catch (err) {
+      if (tracks.length === 0) throw err
+      partial = true
+      break
+    }
   } while (pageToken)
 
-  return { title, tracks }
+  return { title, tracks, partial: partial || undefined }
 }
 
 // ─── Public entry point ──────────────────────────────────────────────────
@@ -226,7 +265,7 @@ async function fetchViaYouTubeAPI(
 export async function fetchYouTubePlaylist(
   playlistId: string,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<{ title: string; tracks: Track[] }> {
+): Promise<{ title: string; tracks: Track[]; partial?: boolean }> {
   const apiKey = getYouTubeApiKey()
   if (apiKey) {
     return fetchViaYouTubeAPI(playlistId, apiKey, onProgress)

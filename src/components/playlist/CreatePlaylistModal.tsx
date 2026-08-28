@@ -52,7 +52,15 @@ export default function CreatePlaylistModal({ open, onClose }: CreatePlaylistMod
       setFetchedTracks(result.tracks)
       setPlaylistTitle(result.title)
       setName(result.title)
-      toast.success(`Found ${result.tracks.length} tracks`, { id: toastId })
+      if (result.partial) {
+        toast.warning(
+          `Got ${result.tracks.length} tracks so far — this playlist may be larger. ` +
+            `Add a YouTube API key in Settings for a complete import.`,
+          { id: toastId, duration: 8000 },
+        )
+      } else {
+        toast.success(`Found ${result.tracks.length} tracks`, { id: toastId })
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to fetch playlist', { id: toastId })
     } finally {
