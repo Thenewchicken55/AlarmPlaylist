@@ -1,5 +1,7 @@
 # AlarmPlaylist
 
+<img width="960" height="604" alt="image" src="https://github.com/user-attachments/assets/4fedc5cc-4e7a-429c-886b-38e2f7c030a8" />
+
 A cross-platform alarm clock that wakes you up with music from your playlists. Set an alarm with a specific song or let it pick a random track — works with local audio files, YouTube playlists, and M3U/PLS imports.
 
 ## Tech Stack
