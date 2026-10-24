@@ -21,6 +21,8 @@ A cross-platform alarm clock that wakes you up with music from your playlists. S
 
 ## Development
 
+Requires Node.js 22+ (see `engines` in `package.json`).
+
 ```bash
 npm install
 npm run dev     # Start dev server with HMR
