@@ -44,7 +44,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
       'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
     )
     const first = focusables[0]
-    first?.focus()
+    if (!panel.contains(document.activeElement)) first?.focus()
 
     function trap(e: KeyboardEvent) {
       if (e.key !== 'Tab') return

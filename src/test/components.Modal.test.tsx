@@ -32,4 +32,22 @@ describe('Modal', () => {
     fireEvent.click(container.querySelector('.bg-black\\/60') ?? container.firstChild!)
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('keeps focus on an autoFocus field instead of the close button', () => {
+    render(
+      <Modal open title="Test" onClose={vi.fn()}>
+        <input aria-label="Name" autoFocus />
+      </Modal>,
+    )
+    expect(screen.getByLabelText('Name')).toHaveFocus()
+  })
+
+  it('focuses the first control when nothing inside is focused', () => {
+    render(
+      <Modal open title="Test" onClose={vi.fn()}>
+        <input aria-label="Name" />
+      </Modal>,
+    )
+    expect(screen.getByRole('button', { name: 'Close dialog' })).toHaveFocus()
+  })
 })

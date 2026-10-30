@@ -12,7 +12,7 @@ function TrackInfoComponent({ track, compact }: TrackInfoProps) {
     return (
       <div className="text-center">
         <p className="text-base font-medium text-slate-500">No track selected</p>
-        <p className="mt-1 text-sm text-slate-600">Choose a song from your playlists</p>
+        <p className="mt-1 text-sm text-slate-400">Choose a song from your playlists</p>
       </div>
     )
   }

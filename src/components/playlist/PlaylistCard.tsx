@@ -51,7 +51,7 @@ export default function PlaylistCard({ playlist, onClick, onDelete }: PlaylistCa
               <span className="capitalize">{playlist.source}</span>
             </p>
             {playlist.tracks.length > 0 && (
-              <p className="mt-1 truncate text-xs text-slate-600">
+              <p className="mt-1 truncate text-xs text-slate-400">
                 {playlist.tracks[0].title}
                 {playlist.tracks.length > 1 && ` + ${playlist.tracks.length - 1} more`}
               </p>
