@@ -1,10 +1,12 @@
-import type { InputHTMLAttributes } from 'react'
+import { useId, type InputHTMLAttributes } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
 }
 
-export default function Input({ label, className = '', id, ...props }: InputProps) {
+export default function Input({ label, className = '', id: idProp, ...props }: InputProps) {
+  const generatedId = useId()
+  const id = idProp ?? generatedId
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
