@@ -17,6 +17,9 @@ function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track 
   return tracks[Math.floor(Math.random() * tracks.length)]
 }
 
+// Snooze counts must outlive the overlay: snoozing unmounts it and re-opens a fresh one later.
+const snoozeCounts = new Map<string, number>()
+
 function AlarmAlertContent({
   alarm,
   onClose,
@@ -25,7 +28,7 @@ function AlarmAlertContent({
   onClose: () => void
 }) {
   const playlists = usePlaylistStore((s) => s.playlists)
-  const [snoozeCount, setSnoozeCount] = useState(0)
+  const [snoozeCount, setSnoozeCount] = useState(() => snoozeCounts.get(alarm.id) ?? 0)
   const [now, setNow] = useState(() => Date.now())
   const loadedRef = useRef(false)
   const wasPlayingRef = useRef(false)
@@ -212,6 +215,7 @@ function AlarmAlertContent({
     loadedRef.current = false
     if (wasPlayingRef.current) usePlayerStore.getState().resume()
     onClose()
+    snoozeCounts.delete(alarm.id)
     setSnoozeCount(0)
   }
 
@@ -229,6 +233,7 @@ function AlarmAlertContent({
     loadedRef.current = false
     wasPlayingRef.current = false
     setSnoozeCount((c) => c + 1)
+    snoozeCounts.set(alarm.id, snoozeCount + 1)
 
     snoozeTimerRef.current = setTimeout(
       () => {
@@ -297,6 +302,7 @@ function AlarmAlertContent({
 
           <button
             onClick={handleDismiss}
+            autoFocus
             className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-indigo-500"
           >
             <X size={24} />
@@ -304,7 +310,7 @@ function AlarmAlertContent({
           </button>
         </div>
 
-        {snoozeLimit && <p className="text-sm text-slate-500">Snooze limit reached</p>}
+        {snoozeLimit && <p className="text-sm text-slate-400">Snooze limit reached</p>}
       </div>
     </div>
   )
