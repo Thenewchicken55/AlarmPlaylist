@@ -212,7 +212,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium text-slate-200">About</p>
               <p className="text-xs text-slate-500">AlarmPlaylist v0.1.0</p>
-              <p className="mt-1 text-xs text-slate-600">Wake up to your favorite music. Cross-platform PWA.</p>
+              <p className="mt-1 text-xs text-slate-400">Wake up to your favorite music. Cross-platform PWA.</p>
             </div>
           </div>
         </Card>

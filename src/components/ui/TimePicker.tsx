@@ -16,6 +16,7 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
   return (
     <div className="flex items-center justify-center gap-2">
       <select
+        aria-label="Hour"
         value={displayHour}
         onChange={(e) => {
           const h = parseInt(e.target.value)
@@ -31,6 +32,7 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
       </select>
       <span className="text-2xl font-bold text-slate-400">:</span>
       <select
+        aria-label="Minute"
         value={minute}
         onChange={(e) => onChange(hour, parseInt(e.target.value))}
         className="w-20 rounded-lg border border-slate-700 bg-slate-800 px-3 py-3 text-center text-2xl font-bold text-slate-100 outline-none focus:border-indigo-500"
@@ -44,6 +46,7 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
       <div className="ml-1 flex flex-col gap-1">
         <button
           type="button"
+          aria-pressed={period === 'AM'}
           onClick={() => setPeriod('AM')}
           className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
             period === 'AM' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
@@ -53,6 +56,7 @@ export default function TimePicker({ hour, minute, onChange }: TimePickerProps) 
         </button>
         <button
           type="button"
+          aria-pressed={period === 'PM'}
           onClick={() => setPeriod('PM')}
           className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
             period === 'PM' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'

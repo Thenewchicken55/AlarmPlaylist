@@ -26,7 +26,7 @@ function AlarmCardComponent({ alarm, onToggle, onEdit, onDelete }: AlarmCardProp
             </span>
             <span className="text-sm text-slate-500">{alarm.name}</span>
           </div>
-          <p className={`mt-1 text-sm ${alarm.enabled ? 'text-slate-400' : 'text-slate-600'}`}>
+          <p className={`mt-1 text-sm ${alarm.enabled ? 'text-slate-400' : 'text-slate-500'}`}>
             {daysLabel(alarm.days)}
           </p>
         </div>

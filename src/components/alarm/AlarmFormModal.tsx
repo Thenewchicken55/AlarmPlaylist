@@ -108,11 +108,15 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-slate-300">Repeat</label>
           <DayPicker days={days} onChange={setDays} />
+          {days.length === 0 && <p className="text-xs text-slate-400">No days selected: this alarm will not repeat.</p>}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-slate-300">Playlist</label>
+          <label htmlFor="alarm-playlist" className="text-sm font-medium text-slate-300">
+            Playlist
+          </label>
           <select
+            id="alarm-playlist"
             value={playlistId ?? ''}
             onChange={(e) => {
               setPlaylistId(e.target.value || null)
@@ -145,6 +149,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
                 Random
               </button>
               <select
+                aria-label="Specific track"
                 value={specificTrackId ?? ''}
                 onChange={(e) => setSpecificTrackId(e.target.value || null)}
                 className="flex-[2] rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-500"
@@ -161,8 +166,11 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
         )}
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-slate-300">Volume: {volume}%</label>
+          <label htmlFor="alarm-volume" className="text-sm font-medium text-slate-300">
+            Volume: {volume}%
+          </label>
           <input
+            id="alarm-volume"
             type="range"
             min={0}
             max={100}
@@ -174,8 +182,8 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-300">Fade in</label>
-            <Toggle checked={fadeIn} onChange={setFadeIn} />
+            <span className="text-sm font-medium text-slate-300">Fade in</span>
+            <Toggle checked={fadeIn} onChange={setFadeIn} aria-label="Fade in" />
           </div>
           {fadeIn && (
             <div className="flex items-center justify-between gap-3">
@@ -204,6 +212,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
             <div className="flex flex-1 items-center gap-2">
               <input
                 type="number"
+                aria-label="Snooze minutes"
                 min={1}
                 max={60}
                 value={snoozeMinutes}
@@ -215,6 +224,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
             <div className="flex flex-1 items-center gap-2">
               <input
                 type="number"
+                aria-label="Maximum snoozes"
                 min={0}
                 max={20}
                 value={maxSnoozes}

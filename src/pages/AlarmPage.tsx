@@ -52,7 +52,7 @@ export default function AlarmPage() {
             <AlarmClock size={32} className="text-slate-500" />
           </div>
           <p className="text-lg font-medium text-slate-400">No alarms yet</p>
-          <p className="mt-1 text-sm text-slate-600">Create an alarm to wake up with music</p>
+          <p className="mt-1 text-sm text-slate-400">Create an alarm to wake up with music</p>
           <button
             onClick={() => setShowForm(true)}
             className="mt-6 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"

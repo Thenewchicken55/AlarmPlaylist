@@ -83,7 +83,7 @@ export default function TrackList({
         </div>
         <div>
           <p className="text-base font-medium text-slate-400">No tracks yet</p>
-          <p className="mt-1 text-sm text-slate-600">Import audio files to get started</p>
+          <p className="mt-1 text-sm text-slate-400">Import audio files to get started</p>
         </div>
         <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
           <Upload size={16} />
