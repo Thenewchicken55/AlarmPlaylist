@@ -70,6 +70,7 @@ async function fetchViaInvidious(
   onProgress?: (loaded: number, total: number) => void,
 ): Promise<{ title: string; tracks: Track[]; partial?: boolean }> {
   const errors: string[] = []
+  let sawNotFound = false
 
   const hosts: string[] = []
   if (import.meta.env.DEV) {
@@ -84,6 +85,7 @@ async function fetchViaInvidious(
     try {
       const res = await fetch(firstUrl)
       if (!res.ok) {
+        if (res.status === 404) sawNotFound = true
         errors.push(`${firstUrl} returned ${res.status}`)
         continue
       }
@@ -129,9 +131,18 @@ async function fetchViaInvidious(
     }
   }
 
+  // A 404 means YouTube itself would not serve the playlist to an anonymous client,
+  // which is what a Private (not Unlisted) playlist or a wrong link looks like.
+  if (sawNotFound) {
+    throw new Error(
+      `YouTube reports this playlist does not exist, so it is most likely Private or the link is wrong. ` +
+        `Set it to "Unlisted" (Private playlists cannot be read by any client) and try again.\n${errors.join('\n')}`,
+    )
+  }
+
   throw new Error(
-    `Could not fetch playlist from Invidious (it may be too large or unindexed). ` +
-      `Add a YouTube API key in Settings for reliable large-playlist support.\n${errors.join('\n')}`,
+    `No Invidious instance could serve this playlist right now. Try again later, ` +
+      `or add a YouTube API key in Settings for the most reliable import.\n${errors.join('\n')}`,
   )
 }
 
