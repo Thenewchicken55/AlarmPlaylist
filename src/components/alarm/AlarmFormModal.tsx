@@ -44,7 +44,6 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return
     setLoading(true)
     try {
       if (!editAlarm) requestNotif()
@@ -91,7 +90,13 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
   return (
     <Modal open={open} onClose={onClose} title={editAlarm ? 'Edit Alarm' : 'New Alarm'}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Wake Up" autoFocus />
+        <Input
+          label="Name (optional)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Wake Up"
+          autoFocus
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-slate-300">Time</label>
@@ -240,7 +245,7 @@ export default function AlarmFormModal({ open, onClose, editAlarm }: AlarmFormMo
           <Button variant="secondary" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!name.trim() || loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? 'Saving...' : editAlarm ? 'Update' : 'Create'}
           </Button>
         </div>

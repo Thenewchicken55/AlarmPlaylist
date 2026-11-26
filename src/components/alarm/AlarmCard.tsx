@@ -12,6 +12,8 @@ interface AlarmCardProps {
 }
 
 function AlarmCardComponent({ alarm, onToggle, onEdit, onDelete }: AlarmCardProps) {
+  // The name is optional, so unnamed alarms are described by their time.
+  const label = alarm.name.trim() || formatTime(alarm.hour, alarm.minute)
   return (
     <div
       className={`rounded-xl border p-4 transition-colors ${
@@ -24,7 +26,7 @@ function AlarmCardComponent({ alarm, onToggle, onEdit, onDelete }: AlarmCardProp
             <span className={`text-4xl font-bold tabular-nums ${alarm.enabled ? 'text-slate-100' : 'text-slate-500'}`}>
               {formatTime(alarm.hour, alarm.minute)}
             </span>
-            <span className="text-sm text-slate-500">{alarm.name}</span>
+            {alarm.name.trim() && <span className="text-sm text-slate-500">{alarm.name}</span>}
           </div>
           <p className={`mt-1 text-sm ${alarm.enabled ? 'text-slate-400' : 'text-slate-500'}`}>
             {daysLabel(alarm.days)}
@@ -34,19 +36,19 @@ function AlarmCardComponent({ alarm, onToggle, onEdit, onDelete }: AlarmCardProp
         <div className="flex items-center gap-2">
           <button
             onClick={onEdit}
-            aria-label={`Edit alarm "${alarm.name}"`}
+            aria-label={`Edit alarm "${label}"`}
             className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
           >
             <Pencil size={16} />
           </button>
           <button
             onClick={onDelete}
-            aria-label={`Delete alarm "${alarm.name}"`}
+            aria-label={`Delete alarm "${label}"`}
             className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-800 hover:text-red-400"
           >
             <Trash2 size={16} />
           </button>
-          <Toggle checked={alarm.enabled} onChange={onToggle} aria-label={`Toggle alarm "${alarm.name}"`} />
+          <Toggle checked={alarm.enabled} onChange={onToggle} aria-label={`Toggle alarm "${label}"`} />
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { usePlaylistStore } from '../../stores/playlistStore'
 import { usePlayerStore } from '../../stores/playerStore'
 import { getAudioUrl } from '../../db/audioStorage'
 import { playFallbackAlarm, stopFallbackAlarm } from '../../utils/fallbackAlarm'
+import { formatTime } from '../../utils/time'
 import type { Track } from '../../types'
 
 function getRandomTrack(tracks: Track[], specificTrackId: string | null): Track | null {
@@ -178,7 +179,7 @@ function AlarmAlertContent({
 
     if ('Notification' in window && Notification.permission === 'granted') {
       const n = new Notification('AlarmPlaylist', {
-        body: `⏰ ${alarm.name}`,
+        body: `⏰ ${alarm.name.trim() || formatTime(alarm.hour, alarm.minute)}`,
         tag: alarm.id,
         requireInteraction: true,
       })
@@ -251,7 +252,7 @@ function AlarmAlertContent({
     <div
       role="alertdialog"
       aria-modal="true"
-      aria-label={`${alarm.name} alarm`}
+      aria-label={alarm.name.trim() ? `${alarm.name} alarm` : `Alarm at ${formatTime(alarm.hour, alarm.minute)}`}
       aria-live="assertive"
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl"
     >
