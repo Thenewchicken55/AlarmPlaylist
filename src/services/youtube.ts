@@ -48,7 +48,9 @@ export function setYouTubeApiKey(key: string) {
 
 // ─── Invidious (keyless, default) ────────────────────────────────────────
 
-const INSTANCES = ['inv.nadeko.net', 'inv.vern.cc']
+// Only instances that answered a public playlist AND sent `Access-Control-Allow-Origin: *`
+// are usable — the browser fetch fails on any instance that omits CORS.
+const INSTANCES = ['inv.nadeko.net', 'inv.zzls.xyz']
 
 const MAX_INVIDIOUS_PAGES = 100 // safety cap (~100 videos/page ⇒ up to ~10,000 tracks)
 
