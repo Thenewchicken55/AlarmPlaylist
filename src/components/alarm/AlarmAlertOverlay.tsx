@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlarmClock, X } from 'lucide-react'
 import { audioPlayer } from '../../services/player'
 import { youtubePlayer } from '../../services/youtubePlayer'
@@ -36,7 +36,16 @@ function AlarmAlertContent({
   const snoozeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const playlist = playlists.find((p) => p.id === alarm.playlistId)
-  const track = playlist ? getRandomTrack(playlist.tracks, alarm.specificTrackId) : null
+
+  // The alarm picks a random track, so the pick must happen once and be kept:
+  // this component re-renders every second for the clock below, and recomputing
+  // it on every render made the displayed track change on every tick.
+  const track = useMemo(
+    () => (playlist ? getRandomTrack(playlist.tracks, alarm.specificTrackId) : null),
+    [playlist, alarm.specificTrackId],
+  )
+  // Don't treat a playlist that is still loading as "nothing to play".
+  const selectionReady = !alarm.playlistId || playlist !== undefined
 
   // Keep the displayed clock ticking while the overlay is open (frozen before).
   useEffect(() => {
@@ -69,8 +78,18 @@ function AlarmAlertContent({
   }, [])
 
   useEffect(() => {
-    if (!track || loadedRef.current) return
+    if (!selectionReady || loadedRef.current) return
     loadedRef.current = true
+
+    // Nothing to play (no playlist chosen, or it has no tracks): beep instead
+    // of leaving the alarm silent.
+    if (!track) {
+      playFallbackAlarm()
+      return () => {
+        stopFallbackAlarm()
+        loadedRef.current = false
+      }
+    }
 
     wasPlayingRef.current = usePlayerStore.getState().isPlaying
     usePlayerStore.getState().pause()
@@ -201,7 +220,7 @@ function AlarmAlertContent({
       loadedRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [track, selectionReady])
 
   function handleDismiss() {
     clearTimeout(snoozeTimerRef.current)
@@ -261,7 +280,7 @@ function AlarmAlertContent({
           {new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
 
-        <p className="text-2xl font-medium text-slate-200">{alarm.name}</p>
+        {alarm.name.trim() && <p className="text-2xl font-medium text-slate-200">{alarm.name}</p>}
 
         {track && (
           <div className="flex flex-col items-center gap-2">
