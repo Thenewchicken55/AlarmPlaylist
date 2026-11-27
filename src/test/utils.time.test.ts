@@ -49,8 +49,58 @@ describe('calculateNextFire', () => {
   })
 })
 
+describe('calculateNextFire — boundaries', () => {
+  it('fires later today for a recurring alarm whose day is today and time is ahead', () => {
+    const now = new Date('2026-06-13T06:00:00') // Saturday
+    const next = calculateNextFire(8, 0, [6], now)
+
+    expect(next.getDate()).toBe(13)
+    expect(next.getHours()).toBe(8)
+  })
+
+  it("skips to the next matching day when today's time has passed", () => {
+    const now = new Date('2026-06-13T09:00:00')
+    const next = calculateNextFire(8, 0, [6], now)
+
+    expect(next.getDate()).toBe(20)
+  })
+
+  it('moves a one-shot alarm to tomorrow when the time is exactly now', () => {
+    const now = new Date('2026-06-13T08:00:00')
+    const next = calculateNextFire(8, 0, [], now)
+
+    expect(next.getDate()).toBe(14)
+  })
+
+  it('uses tomorrow when every day is selected and the time has passed', () => {
+    const now = new Date('2026-06-13T09:00:00')
+    const next = calculateNextFire(8, 0, [0, 1, 2, 3, 4, 5, 6], now)
+
+    expect(next.getDate()).toBe(14)
+    expect(next.getHours()).toBe(8)
+  })
+})
+
 describe('isAlarmExpired', () => {
   it('is not expired for recurring alarms', () => {
     expect(isAlarmExpired(8, 0, [1, 2, 3])).toBe(false)
   })
+
+  it('expires a one-shot alarm whose time has passed today', () => {
+    const now = new Date()
+    const past = new Date(now.getTime() - 60 * 60 * 1000)
+    expect(isAlarmExpired(past.getHours(), past.getMinutes(), [])).toBe(true)
+  })
+
+  it('does not expire a one-shot alarm later today', () => {
+    const later = new Date(Date.now() + 60 * 60 * 1000)
+    expect(isAlarmExpired(later.getHours(), later.getMinutes(), [])).toBe(false)
+  })
+})
+
+describe('formatDuration — edges', () => {
+  it('formats zero', () => expect(formatDuration(0)).toBe('0:00'))
+  it('formats just under a minute', () => expect(formatDuration(59)).toBe('0:59'))
+  it('formats exactly one hour', () => expect(formatDuration(3600)).toBe('1:00:00'))
+  it('truncates fractional seconds', () => expect(formatDuration(1.9)).toBe('0:01'))
 })
