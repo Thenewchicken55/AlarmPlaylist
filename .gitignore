@@ -13,3 +13,7 @@ CUsers*
 .playwright-mcp/
 bun.lock
 src-tauri/target/
+
+# Playwright output
+test-results/
+playwright-report/
