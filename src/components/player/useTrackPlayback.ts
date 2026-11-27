@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type ReactHowler from 'react-howler'
 import { usePlayerStore } from '../../stores/playerStore'
-import { getAudioUrl } from '../../db/audioStorage'
+import { getAudioSource } from '../../db/audioStorage'
 import { youtubePlayer } from '../../services/youtubePlayer'
-import { inferFormat } from '../../utils/audio'
+import { inferFormat, type AudioFormat } from '../../utils/audio'
 import { toast } from 'sonner'
 
 /**
@@ -12,6 +12,8 @@ import { toast } from 'sonner'
  * stall detection, and skip-on-error. Returns the bits the renderer needs to
  * draw the actual <ReactHowler> element.
  */
+export type Playback = ReturnType<typeof useTrackPlayback>
+
 export function useTrackPlayback() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
@@ -24,7 +26,6 @@ export function useTrackPlayback() {
   const [url, setUrl] = useState<string | undefined>()
   const [format, setFormat] = useState<string[] | undefined>()
   const howlerRef = useRef<ReactHowler | null>(null)
-  const animFrameRef = useRef<number>(0)
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   const trackIdRef = useRef(currentTrack?.id)
@@ -107,10 +108,15 @@ export function useTrackPlayback() {
     } else {
       async function resolveUrl() {
         let resolvedUrl: string | undefined
+        let resolvedFormat: AudioFormat | undefined
         if (track.blobId) {
-          resolvedUrl = await getAudioUrl(track.blobId)
+          // Blob URLs have no filename, so the format has to come from the store.
+          const source = await getAudioSource(track.blobId)
+          resolvedUrl = source?.url
+          resolvedFormat = source?.format
         } else {
           resolvedUrl = track.url
+          resolvedFormat = resolvedUrl ? inferFormat(resolvedUrl) : undefined
         }
         if (cancelled) return
         if (!resolvedUrl) {
@@ -120,8 +126,7 @@ export function useTrackPlayback() {
 
         skipCountRef.current = 0
         setUrl(resolvedUrl)
-        const fmt = inferFormat(resolvedUrl)
-        setFormat(fmt ? [fmt] : undefined)
+        setFormat(resolvedFormat ? [resolvedFormat] : undefined)
       }
 
       resolveUrl()
@@ -148,20 +153,20 @@ export function useTrackPlayback() {
       return () => clearInterval(progressIntervalRef.current)
     }
 
-    function updateProgress() {
+    if (isYouTube || !isPlaying || !url) return
+
+    // Poll instead of requestAnimationFrame: rAF is paused while the tab is
+    // hidden, which froze the progress bar during background playback, and a
+    // single frame that ran before Howler was ready used to kill the loop.
+    progressIntervalRef.current = setInterval(() => {
       const h = howlerRef.current?.howler
       if (!h) return
       const seek = h.seek() as number
       const dur = h.duration()
       setProgress(dur > 0 ? (seek / dur) * 100 : 0)
-      animFrameRef.current = requestAnimationFrame(updateProgress)
-    }
+    }, 250)
 
-    if (!isYouTube && isPlaying && url) {
-      animFrameRef.current = requestAnimationFrame(updateProgress)
-    }
-
-    return () => cancelAnimationFrame(animFrameRef.current)
+    return () => clearInterval(progressIntervalRef.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, url, isYouTube, setProgress])
 

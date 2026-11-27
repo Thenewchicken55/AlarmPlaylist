@@ -7,12 +7,14 @@ class AudioPlayerService implements Player {
   private url: string | null = null
   private events: PlayerEvents = {}
 
-  load(url: string, events?: PlayerEvents) {
+  load(url: string, events?: PlayerEvents, formatHint?: string) {
     this.unload()
     this.url = url
     this.events = events ?? {}
 
-    const format = inferFormat(url)
+    // A `blob:` URL has no extension, so the caller must supply the format for
+    // stored files; Howler rejects sources whose format it cannot determine.
+    const format = formatHint ?? inferFormat(url)
 
     this.howl = new Howl({
       src: [url],

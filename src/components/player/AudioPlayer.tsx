@@ -1,15 +1,14 @@
 import ReactHowler from 'react-howler'
 import { usePlayerStore } from '../../stores/playerStore'
-import { useTrackPlayback } from './useTrackPlayback'
-import AudioPlayerContext from './AudioPlayerContext'
+import type { Playback } from './useTrackPlayback'
 
 /**
- * Thin renderer. All playback logic lives in useTrackPlayback; this component
- * only mounts the <ReactHowler> element for local audio (YouTube is rendered
- * invisibly by the IFrame host) and exposes `seek` to children via context.
+ * Thin renderer. All playback logic lives in useTrackPlayback (owned by
+ * PlaybackProvider); this component only mounts the <ReactHowler> element for
+ * local audio (YouTube is rendered invisibly by the IFrame host).
  */
-export default function AudioPlayer() {
-  const { url, format, howlerRef, isYouTube, seek, skip } = useTrackPlayback()
+export default function AudioPlayer({ playback }: { playback: Playback }) {
+  const { url, format, howlerRef, isYouTube, skip } = playback
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
   const volume = usePlayerStore((s) => s.volume)
@@ -20,28 +19,29 @@ export default function AudioPlayer() {
   if (!url) return null
 
   return (
-    <AudioPlayerContext value={{ seek }}>
-      <ReactHowler
-        ref={howlerRef}
-        src={url}
-        format={format}
-        playing={isPlaying}
-        volume={volume / 100}
-        html5
-        onLoad={() => {
-          const dur = howlerRef.current?.howler?.duration() ?? 0
-          setDuration(dur)
-        }}
-        onEnd={() => {
-          next()
-        }}
-        onLoadError={(_id, err) => {
-          console.error('Failed to load audio:', currentTrack?.title, err)
-          if (usePlayerStore.getState().currentTrack?.id === currentTrack?.id) {
-            skip(currentTrack?.title ?? 'Unknown', 'failed to load audio')
-          }
-        }}
-      />
-    </AudioPlayerContext>
+    <ReactHowler
+      ref={howlerRef}
+      src={url}
+      format={format}
+      playing={isPlaying}
+      volume={volume / 100}
+      html5
+      onLoad={() => {
+        const dur = howlerRef.current?.howler?.duration() ?? 0
+        setDuration(dur)
+      }}
+      onEnd={() => {
+        // Howler ends a sound as soon as seek >= duration, so a finished howl
+        // re-emits `end` the moment play() is called again. Rewind it first.
+        howlerRef.current?.howler?.seek(0)
+        next()
+      }}
+      onLoadError={(_id, err) => {
+        console.error('Failed to load audio:', currentTrack?.title, err)
+        if (usePlayerStore.getState().currentTrack?.id === currentTrack?.id) {
+          skip(currentTrack?.title ?? 'Unknown', 'failed to load audio')
+        }
+      }}
+    />
   )
 }

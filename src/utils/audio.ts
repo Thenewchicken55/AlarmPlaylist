@@ -8,6 +8,31 @@ export function inferFormat(url: string): AudioFormat | undefined {
   return AUDIO_FORMATS.includes(ext as AudioFormat) ? (ext as AudioFormat) : undefined
 }
 
+const MIME_TO_FORMAT: Record<string, AudioFormat> = {
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/wave': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/flac': 'flac',
+  'audio/x-flac': 'flac',
+  'audio/mp4': 'm4a',
+  'audio/m4a': 'm4a',
+  'audio/x-m4a': 'm4a',
+  'audio/aac': 'aac',
+  'audio/opus': 'opus',
+  'audio/webm': 'webm',
+  'audio/x-ms-wma': 'wma',
+  'audio/wma': 'wma',
+}
+
+/** Map a MIME type (e.g. `audio/x-m4a; codecs=...`) to a Howler format name. */
+export function inferFormatFromMime(mime?: string): AudioFormat | undefined {
+  if (!mime) return undefined
+  return MIME_TO_FORMAT[mime.split(';')[0].trim().toLowerCase()]
+}
+
 /** Check whether a file extension (with or without dot prefix) is a supported audio format. */
 export function isAudioExtension(ext: string): boolean {
   const clean = ext.startsWith('.') ? ext.slice(1).toLowerCase() : ext.toLowerCase()

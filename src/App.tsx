@@ -13,6 +13,7 @@ import { useAlarmStore } from './stores/alarmStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { alarmScheduler } from './services/alarmScheduler'
 import YouTubePlayerHost from './components/player/YouTubePlayerHost'
+import PlaybackProvider from './components/player/PlaybackProvider'
 import AlarmPage from './pages/AlarmPage'
 import PlaylistsPage from './pages/PlaylistsPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
@@ -51,16 +52,18 @@ export default function App() {
   return (
     <>
       <YouTubePlayerHost />
-      <AppShell>
-        <Routes>
-          <Route path="/" element={<Navigate to="/alarms" replace />} />
-          <Route path="/alarms" element={<AlarmPage />} />
-          <Route path="/playlists" element={<PlaylistsPage />} />
-          <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
-          <Route path="/player" element={<PlayerPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </AppShell>
+      <PlaybackProvider>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<Navigate to="/alarms" replace />} />
+            <Route path="/alarms" element={<AlarmPage />} />
+            <Route path="/playlists" element={<PlaylistsPage />} />
+            <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
+            <Route path="/player" element={<PlayerPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </AppShell>
+      </PlaybackProvider>
       <Toaster position="bottom-center" />
       <AlarmAlertOverlay />
     </>

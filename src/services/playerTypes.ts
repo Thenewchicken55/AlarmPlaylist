@@ -8,7 +8,7 @@ export interface PlayerEvents {
 
 /** Unified interface implemented by AudioPlayerService and YouTubePlayerService. */
 export interface Player {
-  load(source: string, events?: PlayerEvents): Promise<void> | void
+  load(source: string, events?: PlayerEvents, format?: string): Promise<void> | void
   play(): void
   pause(): void
   stop(): void

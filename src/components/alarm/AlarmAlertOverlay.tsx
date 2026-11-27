@@ -5,7 +5,7 @@ import { youtubePlayer } from '../../services/youtubePlayer'
 import { useAlarmStore } from '../../stores/alarmStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { usePlayerStore } from '../../stores/playerStore'
-import { getAudioUrl } from '../../db/audioStorage'
+import { getAudioSource } from '../../db/audioStorage'
 import { playFallbackAlarm, stopFallbackAlarm } from '../../utils/fallbackAlarm'
 import { formatTime } from '../../utils/time'
 import type { Track } from '../../types'
@@ -154,8 +154,12 @@ function AlarmAlertContent({
 
       // Local path
       let url: string | undefined
+      let format: string | undefined
       if (track.blobId) {
-        url = await getAudioUrl(track.blobId)
+        // Blob URLs have no filename, so Howler needs the stored format.
+        const source = await getAudioSource(track.blobId)
+        url = source?.url
+        format = source?.format
         if (cancelled) return
       } else {
         url = track.url
@@ -170,28 +174,32 @@ function AlarmAlertContent({
         return
       }
 
-      audioPlayer.load(url, {
-        onLoad: () => {
-          if (cancelled) return
-          if (alarm.fadeIn) {
-            const startVolume = Math.min(10, alarm.volume)
-            audioPlayer.setVolume(startVolume)
-            audioPlayer.play()
-            audioPlayer.fade(startVolume, alarm.volume, alarm.fadeInDuration * 1000)
-          } else {
-            audioPlayer.setVolume(alarm.volume)
-            audioPlayer.play()
-          }
+      audioPlayer.load(
+        url,
+        {
+          onLoad: () => {
+            if (cancelled) return
+            if (alarm.fadeIn) {
+              const startVolume = Math.min(10, alarm.volume)
+              audioPlayer.setVolume(startVolume)
+              audioPlayer.play()
+              audioPlayer.fade(startVolume, alarm.volume, alarm.fadeInDuration * 1000)
+            } else {
+              audioPlayer.setVolume(alarm.volume)
+              audioPlayer.play()
+            }
+          },
+          onLoadError: (err) => {
+            console.error('AlarmPlaylist: failed to load audio', alarm.name, track.title, err)
+            if (!cancelled) playFallbackAlarm()
+          },
+          onPlayError: (err) => {
+            console.error('AlarmPlaylist: failed to play audio', alarm.name, track.title, err)
+            if (!cancelled) playFallbackAlarm()
+          },
         },
-        onLoadError: (err) => {
-          console.error('AlarmPlaylist: failed to load audio', alarm.name, track.title, err)
-          if (!cancelled) playFallbackAlarm()
-        },
-        onPlayError: (err) => {
-          console.error('AlarmPlaylist: failed to play audio', alarm.name, track.title, err)
-          if (!cancelled) playFallbackAlarm()
-        },
-      })
+        format,
+      )
     }
 
     playAlarm()

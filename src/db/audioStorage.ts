@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import Dexie, { type EntityTable } from 'dexie'
+import { inferFormat, inferFormatFromMime, type AudioFormat } from '../utils/audio'
 
 interface StoredAudio {
   id: string
@@ -41,6 +42,27 @@ export async function getAudioUrl(id: string): Promise<string | undefined> {
   const url = URL.createObjectURL(blob)
   blobUrlCache.set(id, url)
   return url
+}
+
+/**
+ * Resolve a stored file to something playable.
+ *
+ * Object URLs carry no filename, so Howler cannot infer the format from a
+ * `blob:` URL and rejects the source. The original filename and MIME type are
+ * kept alongside the blob, so return the format with the URL.
+ */
+export async function getAudioSource(id: string): Promise<{ url: string; format?: AudioFormat } | undefined> {
+  const entry = await audioDb.files.get(id)
+  if (!entry) return undefined
+
+  let url = blobUrlCache.get(id)
+  if (!url) {
+    url = URL.createObjectURL(entry.data)
+    blobUrlCache.set(id, url)
+  }
+
+  const format = inferFormat(entry.name) ?? inferFormatFromMime(entry.data.type)
+  return { url, format }
 }
 
 export function revokeAudioUrl(id: string) {
